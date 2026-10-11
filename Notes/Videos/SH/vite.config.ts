@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/notes/Videos/SH/',
+    base: '/sh/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
