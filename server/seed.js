@@ -9,7 +9,9 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 import dns from "dns";
-try { dns.setServers(["8.8.8.8", "1.1.1.1"]); } catch {}
+if (!process.env.VERCEL) {
+  try { dns.setServers(["8.8.8.8", "1.1.1.1"]); } catch {}
+}
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
