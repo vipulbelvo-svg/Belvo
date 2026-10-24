@@ -141,7 +141,8 @@ const LINK_COLUMNS: Array<{ title: string; links: FooterLink[] }> = [
       { label: "Join as a Belvo Client", path: "/client" },
       { label: "Referral Programs", href: "mailto:contact.belvo@gmail.com?subject=Referral%20Programs" },
       { label: "Help & Support", href: "mailto:contact.belvo@gmail.com?subject=Help%20and%20Support" },
-      { label: "Collaboration With Us", href: "mailto:contact.belvo@gmail.com?subject=Collaboration%20With%20Us" },
+      { label: "Partner & Creator Network", path: "/partners" },
+      { label: "Collaboration With Us", path: "/partners" },
       { label: "Press & Media", href: "mailto:contact.belvo@gmail.com?subject=Press%20and%20Media" },
       { label: "Refund & Cancellation Policy", href: "mailto:contact.belvo@gmail.com?subject=Refund%20and%20Cancellation%20Policy" },
     ],
@@ -513,10 +514,10 @@ export default function Footer() {
               </span>
               <div>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.875rem", fontWeight: 600, color: COLORS.textPrimary, margin: 0, letterSpacing: "0.01em" }}>
-                  Goregaon
+                  Belvo Studio HQ
                 </p>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.78rem", color: COLORS.textMuted, margin: "2px 0 0", letterSpacing: "0.02em" }}>
-                  Mumbai, Maharashtra
+                  Goregaon, Mumbai, Maharashtra 400104
                 </p>
               </div>
             </div>

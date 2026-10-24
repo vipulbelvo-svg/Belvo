@@ -706,6 +706,15 @@ export default function Careers() {
             </h2>
           </motion.div>
 
+          {/* Partner & Creator Network Banner */}
+          <div style={{ maxWidth: "800px", margin: "24px auto 48px", padding: "16px 24px", borderRadius: "16px", background: "rgba(123, 47, 190, 0.12)", border: "1px solid rgba(123, 47, 190, 0.3)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "14px" }}>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "0.92rem", fontWeight: 700, color: "var(--belvo-text-1)" }}>Looking to collaborate as an independent creator or freelancer?</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--belvo-text-6)", marginTop: "2px" }}>Join our verified Partner & Creator Collective for client project scopes.</div>
+            </div>
+            <a href="/partners" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 18px", borderRadius: "8px", background: "linear-gradient(135deg, #7B2FBE, #a855f7)", color: "#ffffff", fontSize: "0.8rem", fontWeight: 600, textDecoration: "none" }}>Join Partner Network &rarr;</a>
+          </div>
+
           <div
             style={{
               display: "grid",

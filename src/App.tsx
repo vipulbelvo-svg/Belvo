@@ -37,6 +37,7 @@ const NotesPDFs = lazy(() => import("@/pages/NotesPDFs"));
 const LLMs = lazy(() => import("@/pages/LLMs"));
 const Videos = lazy(() => import("@/pages/Videos"));
 const TeamStoryPage = lazy(() => import("@/pages/TeamStoryPage"));
+const Partners = lazy(() => import("@/pages/Partners"));
 
 // Portal imports
 import ClientLayout from "@/app/client/layout";
@@ -173,6 +174,7 @@ function Router() {
                 <Route path="/lms" component={LLMs} />
                 <Route path="/videos" component={Videos} />
                 <Route path="/team-story" component={TeamStoryPage} />
+                <Route path="/partners" component={Partners} />
                 <Route path="/resources" component={Blogs} />
                 <Route component={NotFound} />
               </Switch>

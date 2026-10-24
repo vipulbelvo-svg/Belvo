@@ -6,11 +6,9 @@ import TeamSection from "./TeamSection";
 import BookACall from "./BookACall";
 import FAQ from "./FAQ";
 import Footer from "./Footer";
+import { MapPin, Sparkles, CheckCircle2 } from "lucide-react";
 
 const easeOut = [0.16, 1, 0.3, 1] as [number, number, number, number];
-const RED_TEXT = {
-  color: "#391232",
-} as const;
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -41,7 +39,18 @@ function Counter({ from = 0, to, duration = 2, suffix = "" }: { from?: number; t
     return () => cancelAnimationFrame(animId);
   }, [inView, from, to, duration]);
 
-  return <span ref={ref} style={RED_TEXT}>{count}{suffix}</span>;
+  return (
+    <span
+      ref={ref}
+      style={{
+        background: "linear-gradient(135deg, #ffffff 40%, #c794ff 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+      }}
+    >
+      {count}{suffix}
+    </span>
+  );
 }
 
 export default function About() {
@@ -54,12 +63,16 @@ export default function About() {
 
   return (
     <>
-      <SEO title="About Us" description="Learn about Belvo — a creative agency with 100+ clients, building brands from scratch and scaling businesses globally." path="/about" />
+      <SEO
+        title="About Belvo — Integrated Digital Marketing & Creative Agency | Mumbai"
+        description="Belvo is an integrated digital marketing agency and creative studio based in Goregaon, Mumbai. Discover how we partner with 100+ brands to build, scale, and dominate their categories."
+        path="/about"
+      />
       <section
         id="about"
         ref={sectionRef}
         style={{
-          background: "#000000",
+          background: "#050308",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -69,257 +82,383 @@ export default function About() {
           overflow: "visible",
           padding: "clamp(64px, 8vw, 104px) 24px 0",
         }}
-    >
-      <style>{`
-        .about-blue-content {
-          width: 100%;
-        }
-      `}</style>
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(130,40,200,0.44), transparent)",
-        }}
-      />
-
-      <motion.div
-        style={{
-          position: "absolute",
-          top: "40%",
-          left: "80%",
-          transform: "translate(-50%, -50%)",
-          width: "55vw",
-          height: "55vw",
-          maxWidth: "700px",
-          maxHeight: "700px",
-          background: "radial-gradient(ellipse at center, rgba(123,47,190,0.2) 0%, transparent 65%)",
-          filter: "blur(70px)",
-          pointerEvents: "none",
-          y: bgY,
-        }}
-      />
-
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: "1240px",
-          width: "100%",
-        }}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1.8fr] gap-8 lg:gap-16">
+        <style>{`
+          .about-blue-content {
+            width: 100%;
+          }
+        `}</style>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: "linear-gradient(90deg, transparent, rgba(130,40,200,0.44), transparent)",
+          }}
+        />
 
-          <div>
-            <motion.h2
-              custom={1}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? "visible" : "hidden"}
-              style={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 900,
-                fontSize: "clamp(2.2rem, 5vw, 3.8rem)",
-                lineHeight: 1.08,
-                color: "#a5c9ff",
-                margin: "0 0 24px",
-                letterSpacing: "-0.02em",
-                textTransform: "uppercase",
-              }}
-            >
-              <span style={{
-                background: "linear-gradient(90deg, rgb(199, 148, 255), rgb(255, 180, 213))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}>100+ Clients.</span>
-              <br />
-              <span style={{ color: "#7cb4ff" }}>
-                Stories made to be watched.
-              </span>
-            </motion.h2>
+        <motion.div
+          style={{
+            position: "absolute",
+            top: "30%",
+            left: "80%",
+            transform: "translate(-50%, -50%)",
+            width: "55vw",
+            height: "55vw",
+            maxWidth: "700px",
+            maxHeight: "700px",
+            background: "radial-gradient(ellipse at center, rgba(123,47,190,0.18) 0%, transparent 65%)",
+            filter: "blur(80px)",
+            pointerEvents: "none",
+            y: bgY,
+          }}
+        />
 
-            <motion.div
-              custom={3}
-              variants={fadeUp}
-              initial="hidden"
-              animate={inView ? "visible" : "hidden"}
-              style={{
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "1rem",
-                lineHeight: "1.85",
-                color: "#ffffff",
-                display: "flex",
-                flexDirection: "column",
-                gap: "20px",
-                marginTop: "40px",
-              }}
-            >
-              {[
-                "Over the years, Belvo has had the privilege of working with over 100+ clients — and every single one of them has taught us something new, pushed us to think differently, and reminded us why we do what we do. From scrappy startups with big dreams and bigger ambitions, to established brands ready to break through their next ceiling, we've sat across the table from founders, visionaries, risk-takers, and dreamers — and we've rolled up our sleeves and built something incredible with every single one of them.",
-                "We've crafted brand identities that made people stop mid-scroll and say \"who is that?\" We've run performance campaigns that turned modest budgets into jaw-dropping returns. We've built websites that don't just look beautiful but actually work — pulling in traffic, holding attention, and converting visitors into loyal customers. We've managed social media accounts that went from ghost towns to buzzing communities. We've launched e-commerce stores that sold out. We've written code that scaled. We've generated leads that closed. We've delivered research that changed the direction of entire businesses.",
-                "But beyond the numbers, the campaigns, and the deliverables — what we're most proud of is the relationships. Because behind every brief is a person who bet on their idea, and behind every project at Belvo is a team that refused to let them down.",
-                "100+ clients later, our hunger hasn't changed — if anything, it's only grown stronger. Because for us, every new client isn't just a project. It's a new story. And at Belvo, we intend to make every single one worth telling.",
-              ].map((text, i) => (
-                <motion.p
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={inView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ duration: 0.6, delay: 0.5 + i * 0.15, ease: easeOut }}
-                  style={{ margin: 0 }}
-                >
-                  {text}
-                </motion.p>
-              ))}
-            </motion.div>
-          </div>
-
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            maxWidth: "1240px",
+            width: "100%",
+            paddingBottom: "60px",
+          }}
+        >
+          {/* Badge */}
           <motion.div
-            ref={statsRef}
-            custom={4}
+            custom={0}
             variants={fadeUp}
             initial="hidden"
-            animate={statsInView ? "visible" : "hidden"}
+            animate={inView ? "visible" : "hidden"}
             style={{
-              background: "linear-gradient(145deg, rgba(255, 248, 250, 0.92), rgba(183, 222, 255, 0.64))",
-              border: "1px solid rgba(90, 27, 75, 0.24)",
-              borderRadius: "24px",
-              padding: "clamp(20px, 3vw, 32px)",
-              backdropFilter: "blur(12px)",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              gap: "28px",
-              height: "100%",
-            }}
-            whileHover={{
-              borderColor: "rgba(90, 27, 75, 0.46)",
-              boxShadow: "0 24px 60px rgba(47, 12, 41, 0.18)",
-              transition: { duration: 0.4, ease: easeOut },
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 14px",
+              borderRadius: "999px",
+              background: "rgba(123, 47, 190, 0.12)",
+              border: "1px solid rgba(123, 47, 190, 0.35)",
+              color: "#c794ff",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: "20px",
             }}
           >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 0,
-                background: "linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 223, 229, 0.76))",
-                border: "1px solid rgba(90, 27, 75, 0.2)",
-                borderRadius: "12px",
-                overflow: "hidden",
-              }}
-            >
-              {[
-                { label: "Global Clients", value: 100, suffix: "+" },
-                { label: "Commitment", value: 100, suffix: "%" },
-              ].map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={statsInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ duration: 0.5, delay: 0.8 + i * 0.1, ease: easeOut }}
+            <Sparkles size={14} /> Agency Narrative & Mission
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1.7fr] gap-8 lg:gap-14 items-start">
+            {/* Left Narrative Column */}
+            <div>
+              <motion.h1
+                custom={1}
+                variants={fadeUp}
+                initial="hidden"
+                animate={inView ? "visible" : "hidden"}
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 900,
+                  fontSize: "clamp(2.2rem, 5vw, 3.8rem)",
+                  lineHeight: 1.08,
+                  color: "#ffffff",
+                  margin: "0 0 24px",
+                  letterSpacing: "-0.02em",
+                  textTransform: "uppercase",
+                }}
+              >
+                <span
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    borderLeft: i === 0 ? "none" : "1px solid rgba(90, 27, 75, 0.2)",
-                    borderRadius: 0,
-                    padding: "clamp(18px, 2.4vw, 28px)",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                  whileHover={{
-                    backgroundColor: "rgba(245, 226, 239, 0.66)",
-                    transition: { duration: 0.3 },
+                    background: "linear-gradient(90deg, rgb(199, 148, 255), rgb(255, 180, 213))",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
                   }}
                 >
-                  <motion.div
-                    style={{
-                      position: "absolute", top: -20, right: -20,
-                      width: 60, height: 60, borderRadius: "50%",
-                      background: "radial-gradient(circle, rgba(90, 27, 75, 0.28), transparent)",
-                      pointerEvents: "none",
-                    }}
-                    animate={{ scale: [1, 1.3, 1] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
-                  />
+                  100+ Brands.
+                </span>
+                <br />
+                <span style={{ color: "#a5c9ff" }}>
+                  Stories Engineered To Scale.
+                </span>
+              </motion.h1>
+
+              <motion.div
+                custom={2}
+                variants={fadeUp}
+                initial="hidden"
+                animate={inView ? "visible" : "hidden"}
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "0.98rem",
+                  lineHeight: "1.85",
+                  color: "rgba(255, 255, 255, 0.78)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "18px",
+                  marginTop: "28px",
+                }}
+              >
+                <p style={{ margin: 0 }}>
+                  <strong>Belvo</strong> is an integrated digital marketing agency and creative studio headquartered in <strong>Goregaon, Mumbai</strong>. We partner with fast-scaling startups, direct-to-consumer pioneers, and established industry leaders to engineer brands that command attention and drive measurable growth.
+                </p>
+                <p style={{ margin: 0 }}>
+                  Over the years, we have had the privilege of accelerating over <strong>100+ brands across 15+ industry verticals</strong>—from D2C skincare, high-fashion apparel, and gourmet culinary brands to fintech, edtech, and modern healthcare. Every brand partnership has reinforced our foundational principle: true growth happens when world-class creative intuition is reinforced by full-funnel performance data.
+                </p>
+                <p style={{ margin: 0 }}>
+                  We deploy integrated capabilities under one unified roof: performance marketing with ruthless ROAS discipline, cinematic UGC and 3D visual production, organic social community building, influencer amplification, and modern web application development.
+                </p>
+                <p style={{ margin: 0, color: "#c794ff", fontWeight: 500 }}>
+                  Behind every brief is a visionary founder who bet on an idea. Behind every project at Belvo is a relentless cross-functional collective committed to turning that vision into a market leader.
+                </p>
+              </motion.div>
+
+              {/* 4 Core Pillars Snapshot */}
+              <motion.div
+                custom={3}
+                variants={fadeUp}
+                initial="hidden"
+                animate={inView ? "visible" : "hidden"}
+                style={{
+                  marginTop: "32px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {[
+                  { title: "Growth Marketing", desc: "Meta & Google Ads, ROAS optimization" },
+                  { title: "Creative Production", desc: "3D Motion, UGC & commercial video" },
+                  { title: "Brand Strategy & PR", desc: "Positioning & influencer networks" },
+                  { title: "Web & Digital Tech", desc: "High-converting web applications" },
+                ].map((item, idx) => (
                   <div
+                    key={idx}
                     style={{
-                      fontSize: "clamp(2.2rem, 5vw, 3.8rem)",
-                      fontWeight: 900,
-                      fontFamily: "'Inter', sans-serif",
-                      lineHeight: 1,
+                      padding: "14px",
+                      borderRadius: "12px",
+                      background: "rgba(255, 255, 255, 0.03)",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
                     }}
                   >
-                    <Counter from={0} to={stat.value} duration={2} suffix={stat.suffix} />
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#c794ff", fontSize: "0.86rem", fontWeight: 700 }}>
+                      <CheckCircle2 size={14} /> {item.title}
+                    </div>
+                    <div style={{ fontSize: "0.78rem", color: "rgba(255, 255, 255, 0.55)", marginTop: "4px" }}>
+                      {item.desc}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      fontSize: "0.8rem",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                color: "#aac4ff",
-                      marginTop: "4px",
-                    }}
-                  >
-                    {stat.label}
-                  </div>
-                </motion.div>
-              ))}
+                ))}
+              </motion.div>
             </div>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={statsInView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.6, delay: 1.2 }}
+            {/* Right Card: Stats & Verified Studio */}
+            <motion.div
+              ref={statsRef}
+              custom={4}
+              variants={fadeUp}
+              initial="hidden"
+              animate={statsInView ? "visible" : "hidden"}
               style={{
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "0.85rem",
-                lineHeight: "1.7",
-                color: "#182248",
-                margin: "20px 0 0 0",
-              }}
-            >
-              From our creative studio to yours — every space at Belvo is built for collaboration, craft, and breakthrough ideas.
-            </motion.p>
-
-            <div
-              style={{
+                background: "linear-gradient(145deg, rgba(20, 14, 30, 0.85), rgba(10, 8, 16, 0.95))",
+                border: "1px solid rgba(130, 40, 200, 0.28)",
+                borderRadius: "24px",
+                padding: "clamp(20px, 3vw, 32px)",
+                backdropFilter: "blur(16px)",
                 display: "flex",
                 flexDirection: "column",
-                gap: "12px",
-                marginTop: "16px",
+                gap: "24px",
+                boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5)",
               }}
             >
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "18px" }}>
-                  {["Office1", "Office2", "Office3"].map((image, index) => (
-                    <motion.img
-                      key={image}
-                      src={`/OfficeImages/${image}.jpeg`}
-                      alt={`Belvo studio ${index + 1}`}
-                      loading="lazy"
+              {/* Metrics Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "1px",
+                  background: "rgba(130, 40, 200, 0.2)",
+                  borderRadius: "16px",
+                  overflow: "hidden",
+                  border: "1px solid rgba(130, 40, 200, 0.3)",
+                }}
+              >
+                {[
+                  { label: "Client Brands", value: 100, suffix: "+" },
+                  { label: "Client Dedication", value: 100, suffix: "%" },
+                  { label: "Verticals Scaled", value: 15, suffix: "+" },
+                  { label: "Mumbai HQ", value: 1, suffix: " Hub" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    style={{
+                      background: "rgba(13, 10, 22, 0.95)",
+                      padding: "clamp(18px, 2.4vw, 24px)",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "clamp(2rem, 4vw, 2.8rem)",
+                        fontWeight: 900,
+                        fontFamily: "'Inter', sans-serif",
+                        lineHeight: 1,
+                      }}
+                    >
+                      <Counter from={0} to={stat.value} duration={2} suffix={stat.suffix} />
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.76rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: "rgba(255, 255, 255, 0.6)",
+                        marginTop: "8px",
+                      }}
+                    >
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Verified Location Card (Brief Item 04) */}
+              <div
+                style={{
+                  padding: "16px",
+                  borderRadius: "16px",
+                  background: "rgba(123, 47, 190, 0.08)",
+                  border: "1px solid rgba(123, 47, 190, 0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "10px",
+                      background: "rgba(123, 47, 190, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#c794ff",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.92rem", fontWeight: 700, color: "#ffffff" }}>
+                      Belvo Agency & Studio HQ
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.65)" }}>
+                      Goregaon, Mumbai, Maharashtra 400104
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: "999px",
+                    background: "rgba(34, 197, 94, 0.15)",
+                    border: "1px solid rgba(34, 197, 94, 0.35)",
+                    color: "#4ade80",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  Verified Office
+                </div>
+              </div>
+
+              {/* Studio Workspace Photos (Brief Item 04) */}
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: "rgba(255, 255, 255, 0.6)",
+                    }}
+                  >
+                    Creative Space & Studio
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "#c794ff" }}>
+                    Goregaon Workspace
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+                  {[
+                    { id: "Office1", label: "Studio 1" },
+                    { id: "Office2", label: "Studio 2" },
+                    { id: "Office3", label: "Studio 3" },
+                  ].map((image, index) => (
+                    <motion.div
+                      key={image.id}
                       initial={{ opacity: 0, y: 12 }}
                       animate={statsInView ? { opacity: 1, y: 0 } : {}}
-                      transition={{ duration: 0.45, delay: 1.25 + index * 0.1, ease: easeOut }}
-                      style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover", borderRadius: "16px" }}
-                    />
+                      transition={{ duration: 0.45, delay: 0.3 + index * 0.1, ease: easeOut }}
+                      style={{
+                        position: "relative",
+                        borderRadius: "14px",
+                        overflow: "hidden",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        aspectRatio: "16 / 10",
+                      }}
+                    >
+                      <img
+                        src={`/OfficeImages/${image.id}.jpeg`}
+                        alt={`Belvo Goregaon Studio ${index + 1}`}
+                        loading="lazy"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transition: "transform 0.4s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "scale(1.06)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
+                      />
+                    </motion.div>
                   ))}
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
-      </div>
-      <div className="about-blue-content">
-        <ExploreSection />
-        <TeamSection />
-        <BookACall />
-        <FAQ />
-      </div>
-      <div style={{ width: "100vw", marginLeft: "calc(-50vw + 50%)" }}>
-        <Footer />
-      </div>
-    </section>
+
+        <div className="about-blue-content">
+          <ExploreSection />
+          <TeamSection />
+          <BookACall />
+          <FAQ />
+        </div>
+        <div style={{ width: "100vw", marginLeft: "calc(-50vw + 50%)" }}>
+          <Footer />
+        </div>
+      </section>
     </>
   );
 }

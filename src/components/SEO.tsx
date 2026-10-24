@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 
 const SITE_NAME = "Belvo";
-const DEFAULT_DESC = "Belvo is a high-end creative agency that builds brands from scratch. We help ideas come into reality and scale your business globally.";
+const DEFAULT_DESC =
+  "Belvo is a premium full-service digital marketing and creative agency based in Goregaon, Mumbai. We build, scale, and transform brands with performance marketing, web development, SEO, and creative direction.";
 const DEFAULT_OG_IMAGE = "/opengraph.jpg";
-const SITE_URL = "https://belvo.agency";
+const SITE_URL = "https://belvo.buzz";
 
 interface SEOProps {
   title: string;
@@ -13,7 +14,13 @@ interface SEOProps {
   path?: string;
 }
 
-export default function SEO({ title, description = DEFAULT_DESC, ogImage = DEFAULT_OG_IMAGE, ogType = "website", path = "/" }: SEOProps) {
+export default function SEO({
+  title,
+  description = DEFAULT_DESC,
+  ogImage = DEFAULT_OG_IMAGE,
+  ogType = "website",
+  path = "/",
+}: SEOProps) {
   useEffect(() => {
     const fullTitle = `${title} — ${SITE_NAME}`;
     const url = `${SITE_URL}${path}`;
@@ -43,7 +50,9 @@ export default function SEO({ title, description = DEFAULT_DESC, ogImage = DEFAU
     setMeta("twitter:description", description);
     setMeta("twitter:image", ogImg);
 
-    const link = document.querySelector('link[rel="canonical"]') || document.createElement("link");
+    const link =
+      document.querySelector('link[rel="canonical"]') ||
+      document.createElement("link");
     link.setAttribute("rel", "canonical");
     link.setAttribute("href", url);
     if (!link.parentNode) document.head.appendChild(link);
