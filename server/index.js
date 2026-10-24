@@ -77,6 +77,8 @@ app.post("/admin/login", authLimiter, async (req, res) => {
 
     if (!username || !password) {
       return res.status(400).json({ success: false, message: "Username and password are required" });
+
+
     }
 
     if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
@@ -92,6 +94,33 @@ app.post("/admin/login", authLimiter, async (req, res) => {
     res.json({ success: true, token });
   } catch (err) {
     console.error("Login error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+app.post("/intern/login", authLimiter, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const INTERN_USER = process.env.INTERN_USERNAME || "belvo.internportal";
+    const INTERN_PASS = process.env.INTERN_PASSWORD || "Belvo.intern@5";
+
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: "Username and password are required" });
+    }
+
+    if (username.trim().toLowerCase() !== INTERN_USER.toLowerCase() || password !== INTERN_PASS) {
+      return res.status(401).json({ success: false, message: "Invalid username or password" });
+    }
+
+    const token = jwt.sign(
+      { username, role: "intern" },
+      getJWTSecret(),
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, token, username });
+  } catch (err) {
+    console.error("Intern login error:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });

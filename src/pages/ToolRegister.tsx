@@ -4,9 +4,7 @@ import { CheckCircle2, ArrowLeft } from "lucide-react";
 
 // In production (Vercel): /api/tools-register goes to the serverless function
 // In development: use local backend on port 3001
-const API_URL = window.location.hostname.includes("belvo.buzz")
-    ? ""
-    : "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 export default function ToolRegister() {
     const [, navigate] = useLocation();

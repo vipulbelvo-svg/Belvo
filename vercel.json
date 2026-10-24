@@ -1,31 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "services": {
-    "app": {
-      "root": ".",
-      "framework": "vite"
-    },
-    "notes": {
-      "root": "Notes",
-      "framework": "vite"
-    },
-    "sh": {
-      "root": "Notes/Videos/SH",
-      "framework": "vite"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/notes/(.*)",
-      "destination": { "service": "notes" }
-    },
-    {
-      "source": "/sh/(.*)",
-      "destination": { "service": "sh" }
-    },
-    {
-      "source": "/(.*)",
-      "destination": { "service": "app" }
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
