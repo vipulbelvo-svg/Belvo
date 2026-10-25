@@ -57,6 +57,30 @@ const ROLES = [
     desc: "Engineer the tools and systems that power BELVO's growing suite of digital products.",
     icon: <SvgIcon><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></SvgIcon>,
   },
+  {
+    id: "graphic-designer",
+    title: "Graphic Designer",
+    desc: "Create captivating visual identities, marketing collateral, brand guidelines, and high-conversion digital assets.",
+    icon: (
+      <SvgIcon>
+        <path d="M12 19l7-7 3 3-7 7-3-3z" />
+        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+        <path d="M2 2l7.586 7.586" />
+        <circle cx="11" cy="11" r="2" />
+      </SvgIcon>
+    ),
+  },
+  {
+    id: "interior-designer",
+    title: "Interior Designer",
+    desc: "Transform spatial environments through bespoke conceptual designs, 3D visualizations, material selection, and site planning.",
+    icon: (
+      <SvgIcon>
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </SvgIcon>
+    ),
+  },
 ];
 
 type ApplicationData = {

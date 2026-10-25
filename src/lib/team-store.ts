@@ -141,7 +141,7 @@ export const SEED_TEAMS: TeamEntry[] = [
   },
   {
     id: "admin",
-    name: "Human Resources",
+    name: "Administration",
     color: "#007BFF",
     lightColor: "#0056b3",
     responsibilities: ["Operations", "Team Coordination", "Client Communication", "Internal Management"],
@@ -161,6 +161,34 @@ export const SEED_TEAMS: TeamEntry[] = [
         responsibilities: ["Strategic Execution", "Process Optimization", "Partnership Development", "Performance Tracking"],
       }),
     ],
+  },
+  {
+    id: "hr",
+    name: "HR",
+    color: "#d97706",
+    lightColor: "#f59e0b",
+    members: [],
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    color: "#0b3b9c",
+    lightColor: "#5ba9e6",
+    members: [],
+  },
+  {
+    id: "full-stack",
+    name: "Full Stack",
+    color: "#0b3b9c",
+    lightColor: "#5ba9e6",
+    members: [],
+  },
+  {
+    id: "aiml",
+    name: "AIML",
+    color: "#0b3b9c",
+    lightColor: "#5ba9e6",
+    members: [],
   },
 ];
 

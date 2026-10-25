@@ -66,9 +66,17 @@ const FALLBACK_COLORS: Record<string, { c: string; lc: string }> = {
   web: { c: "#7B2FBE", lc: "#9D4EDD" },
   app: { c: "#7B2FBE", lc: "#9D4EDD" },
   cyber: { c: "#7B2FBE", lc: "#9D4EDD" },
+  software: { c: "#7B2FBE", lc: "#9D4EDD" },
   analytics: { c: "#7B2FBE", lc: "#9D4EDD" },
   graphic: { c: "#7B2FBE", lc: "#9D4EDD" },
+  social: { c: "#7B2FBE", lc: "#9D4EDD" },
+  content: { c: "#7B2FBE", lc: "#9D4EDD" },
+  cinematography: { c: "#7B2FBE", lc: "#9D4EDD" },
   admin: { c: "#007BFF", lc: "#0056b3" },
+  hr: { c: "#d97706", lc: "#f59e0b" },
+  marketing: { c: "#0b3b9c", lc: "#5ba9e6" },
+  "full-stack": { c: "#0b3b9c", lc: "#5ba9e6" },
+  aiml: { c: "#0b3b9c", lc: "#5ba9e6" },
 };
 
 // ── Modal wrapper ─────────────────────────────────────

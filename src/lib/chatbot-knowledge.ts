@@ -131,7 +131,7 @@ export const INTENTS: Intent[] = [
   },
   {
     keywords: ["career", "job", "hiring", "vacancy", "apply", "position", "intern"],
-    answer: { text: "We're hiring! 7 open positions: Social Media Management, Digital Marketing, Business Analyst, Web Developers, App Developers, HR, and Software Developers. Apply through our Careers page with your Full Name, Age, Role, Qualification, Education, Experience, Address, Message, Email, WhatsApp, and Resume (PDF/DOC/DOCX, max 5MB). Applications acknowledged within 48 hours. Email: career.belvo@gmail.com" },
+    answer: { text: "We're hiring! 9 open positions: Social Media Management, Digital Marketing, Business Analyst, Web Developers, App Developers, HR, Software Developers, Graphic Designer, and Interior Designer. Apply through our Careers page with your Full Name, Age, Role, Qualification, Education, Experience, Address, Message, Email, WhatsApp, and Resume (PDF/DOC/DOCX, max 5MB). Applications acknowledged within 48 hours. Email: career.belvo@gmail.com" },
   },
   {
     keywords: ["portfolio", "client", "project", "brands worked", "clients", "showcase"],

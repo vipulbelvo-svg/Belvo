@@ -195,7 +195,7 @@ export default function TeamSection() {
   const { teams } = useTeamStore();
 
   const adminTeam = teams.find((t) => t.id === "admin");
-  const regularTeams = teams.filter((t) => t.id !== "admin");
+  const regularTeams = teams.filter((t) => t.id !== "admin" && t.members.length > 0);
 
   return (
     <>
