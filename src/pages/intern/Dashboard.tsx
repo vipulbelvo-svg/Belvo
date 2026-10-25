@@ -140,7 +140,7 @@ function MemberModal({ teamId, teamColor, teamLightColor, initial, onClose }: {
     const patch = {
       name: name.trim(), role: role.trim() || undefined,
       responsibilities: resp.split(",").map(s => s.trim()).filter(Boolean),
-      imageUrl: photo,
+      imageUrl: photo === "" ? null : (photo || initial?.imageUrl || null),
     };
     isEdit ? updateMember(teamId, initial!.id, patch) : addMember(teamId, patch);
     onClose();
@@ -227,7 +227,7 @@ function MemberModal({ teamId, teamColor, teamLightColor, initial, onClose }: {
           {photo && (
             <button
               type="button"
-              onClick={e => { e.stopPropagation(); setPhoto(null); setPhotoError(""); }}
+              onClick={e => { e.stopPropagation(); setPhoto(""); setPhotoError(""); }}
               style={{ position: "absolute", top: 10, right: 10, width: 22, height: 22, borderRadius: "50%", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f87171", flexShrink: 0 }}
               title="Remove photo"
             >
@@ -421,7 +421,7 @@ function MemberCard({ member, team }: { member: TeamMemberEntry; team: TeamEntry
             {member.name}
           </p>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "0.62rem", fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: team.lightColor, margin: "3px 0 0" }}>
-            {member.role ?? team.name}
+            {member.role?.trim() || team.name}
           </p>
           {member.responsibilities && member.responsibilities.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 5 }}>

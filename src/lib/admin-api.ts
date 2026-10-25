@@ -3,6 +3,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "";
 export interface TeamMember {
   id: number | string;
   name: string;
+  role?: string;
   team_id: string;
   team_name: string;
   responsibilities: string[];
@@ -127,6 +128,7 @@ export async function fetchTeam(): Promise<TeamMember[]> {
 
 export async function createMember(member: {
   name: string;
+  role?: string;
   teamId: string;
   teamName: string;
   responsibilities?: string[];
@@ -144,11 +146,12 @@ export async function updateMember(
   id: number | string,
   member: Partial<{
     name: string;
+    role: string;
     teamId: string;
     teamName: string;
     responsibilities: string[];
     sortOrder: number;
-    imageUrl: string;
+    imageUrl: string | null;
   }>
 ): Promise<TeamMember> {
   const data = await api<{ success: boolean; member: TeamMember }>(`/api/team/${id}`, {

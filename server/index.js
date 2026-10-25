@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3001;
 // ── Middleware ──────────────────────────────────────────
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ── Multer setup for image uploads ─────────────────────
@@ -555,8 +555,11 @@ app.get(["/api/team", "/team"], async (req, res) => {
     const mapped = members.map((m) => ({
       ...m,
       id: String(m._id || m.id),
+      name: m.name,
+      role: m.role || undefined,
       team_id: m.team_id || m.teamId,
       team_name: m.team_name || m.teamName,
+      responsibilities: m.responsibilities || [],
       image_url: m.image_url || m.imageUrl,
     }));
 
@@ -574,7 +577,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
       return res.status(500).json({ success: false, message: "Database not configured" });
     }
 
-    const { name, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
+    const { name, role, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
 
     if (!name || !teamId) {
       return res.status(400).json({ success: false, message: "Name and team are required" });
@@ -584,6 +587,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
     const db = await getDb();
     const member = {
       name: name.trim(),
+      role: role ? role.trim() : "",
       team_id: teamId,
       team_name: teamName || "",
       responsibilities: responsibilities || [],
@@ -612,10 +616,11 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
     }
 
     const { id } = req.params;
-    const { name, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
+    const { name, role, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
 
     const updates = {};
-    if (name !== undefined) updates.name = name;
+    if (name !== undefined) updates.name = name ? name.trim() : "";
+    if (role !== undefined) updates.role = role ? role.trim() : "";
     if (teamId !== undefined) updates.team_id = teamId;
     if (teamName !== undefined) updates.team_name = teamName;
     if (responsibilities !== undefined) updates.responsibilities = responsibilities;
@@ -632,14 +637,31 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
       query = { $or: [{ id: id }, { _id: id }] };
     }
 
-    const member = await db.collection("team_members").findOneAndUpdate(
+    let member = await db.collection("team_members").findOneAndUpdate(
       query,
       { $set: updates },
       { returnDocument: "after", includeResultMetadata: false }
     );
 
     if (!member) {
-      return res.json({ success: true, message: "Updated", member: { id, ...updates } });
+      // Document was not in MongoDB (e.g. seed member or custom string ID). Insert/upsert it!
+      const now = new Date().toISOString();
+      const newDoc = {
+        id: String(id),
+        _id: ObjectId.isValid(id) && id.length === 24 ? new ObjectId(id) : String(id),
+        name: name ? name.trim() : "",
+        role: role ? role.trim() : "",
+        team_id: teamId || "web",
+        team_name: teamName || "",
+        responsibilities: responsibilities || [],
+        image_url: imageUrl || null,
+        sort_order: sortOrder || 0,
+        created_at: now,
+        updated_at: now,
+        ...updates,
+      };
+      await db.collection("team_members").insertOne(newDoc);
+      member = newDoc;
     }
 
     res.json({ success: true, member: { ...member, id: String(member._id || member.id) } });

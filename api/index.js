@@ -205,7 +205,7 @@ app.post(["/intern/login", "/api/intern/login"], authLimiter, async (req, res) =
 
 const ALLOWED_INTERN_EMAIL = process.env.ALLOWED_INTERN_EMAIL;
 
-app.post("/intern/send-otp", otpLimiter, async (req, res) => {
+app.post(["/api/intern/send-otp", "/intern/send-otp"], otpLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email || !email.includes("@")) {
@@ -230,7 +230,7 @@ app.post("/intern/send-otp", otpLimiter, async (req, res) => {
   }
 });
 
-app.post("/intern/verify-otp", otpLimiter, async (req, res) => {
+app.post(["/api/intern/verify-otp", "/intern/verify-otp"], otpLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) {
@@ -257,7 +257,7 @@ app.post("/intern/verify-otp", otpLimiter, async (req, res) => {
   }
 });
 
-app.post("/intern/submit-offer-letter", async (req, res) => {
+app.post(["/api/intern/submit-offer-letter", "/intern/submit-offer-letter"], async (req, res) => {
   try {
     const { email, name, age, aadharNumber, designation, tenure, address } = req.body;
     if (!email || !name || !age || !aadharNumber || !designation || !tenure || !address) {
@@ -280,7 +280,7 @@ app.post("/intern/submit-offer-letter", async (req, res) => {
   }
 });
 
-app.post("/intern/submit-id-card", async (req, res) => {
+app.post(["/api/intern/submit-id-card", "/intern/submit-id-card"], async (req, res) => {
   try {
     const { email, name, department, photoBase64 } = req.body;
     if (!email || !name || !department) {
@@ -318,7 +318,7 @@ app.post("/intern/submit-id-card", async (req, res) => {
   }
 });
 
-app.get("/intern/checklist-status", (req, res) => {
+app.get(["/api/intern/checklist-status", "/intern/checklist-status"], (req, res) => {
   try {
     const { email } = req.query;
     if (!email) {
@@ -334,7 +334,7 @@ app.get("/intern/checklist-status", (req, res) => {
   }
 });
 
-app.post("/intern/submit-nda", async (req, res) => {
+app.post(["/api/intern/submit-nda", "/intern/submit-nda"], async (req, res) => {
   try {
     const { email, name, pdfBase64 } = req.body;
     if (!email || !pdfBase64) {
@@ -363,7 +363,7 @@ app.post("/intern/submit-nda", async (req, res) => {
   }
 });
 
-app.post("/intern/mark-checklist", (req, res) => {
+app.post(["/api/intern/mark-checklist", "/intern/mark-checklist"], (req, res) => {
   try {
     const { email, item } = req.body;
     if (!email || !item) {
@@ -384,7 +384,7 @@ app.post("/intern/mark-checklist", (req, res) => {
   }
 });
 
-app.post("/intern/mark-social", (req, res) => {
+app.post(["/api/intern/mark-social", "/intern/mark-social"], (req, res) => {
   try {
     const { email, item } = req.body;
     if (!email || !item) {
@@ -405,7 +405,7 @@ app.post("/intern/mark-social", (req, res) => {
   }
 });
 
-app.post("/intern/submit-onboarding", async (req, res) => {
+app.post(["/api/intern/submit-onboarding", "/intern/submit-onboarding"], async (req, res) => {
   try {
     const { email, offerLetter, idCard, nda, social } = req.body;
     if (!email) {
@@ -446,8 +446,11 @@ app.get(["/api/team", "/team"], async (req, res) => {
       const mapped = members.map(m => ({
         ...m,
         id: String(m._id || m.id),
+        name: m.name,
+        role: m.role || undefined,
         team_id: m.team_id || m.teamId,
         team_name: m.team_name || m.teamName,
+        responsibilities: m.responsibilities || [],
         image_url: m.image_url || m.imageUrl,
       }));
       if (mapped.length > 0) {
@@ -464,7 +467,7 @@ app.get(["/api/team", "/team"], async (req, res) => {
 
 app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
   try {
-    const { name, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
+    const { name, role, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
     if (!name || !teamId) {
       return res.status(400).json({ success: false, message: "Name and team are required" });
     }
@@ -474,6 +477,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
       id: newId,
       _id: newId,
       name: name.trim(),
+      role: role ? role.trim() : "",
       team_id: teamId,
       team_name: teamName || "",
       responsibilities: responsibilities || [],
@@ -504,9 +508,10 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
 app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
+    const { name, role, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
     const updates = {};
-    if (name !== undefined) updates.name = name;
+    if (name !== undefined) updates.name = name ? name.trim() : "";
+    if (role !== undefined) updates.role = role ? role.trim() : "";
     if (teamId !== undefined) updates.team_id = teamId;
     if (teamName !== undefined) updates.team_name = teamName;
     if (responsibilities !== undefined) updates.responsibilities = responsibilities;
@@ -518,6 +523,8 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
       const idx = globalThis.__belvo_members.findIndex(m => String(m.id) === String(id) || String(m._id) === String(id));
       if (idx !== -1) {
         globalThis.__belvo_members[idx] = { ...globalThis.__belvo_members[idx], ...updates };
+      } else {
+        globalThis.__belvo_members.push({ id, ...updates });
       }
     }
 
@@ -531,11 +538,31 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
         } else {
           query = { $or: [{ id: id }, { _id: id }] };
         }
-        await db.collection("team_members").findOneAndUpdate(
+        const updatedDoc = await db.collection("team_members").findOneAndUpdate(
           query,
           { $set: updates },
           { returnDocument: "after", includeResultMetadata: false }
         );
+
+        if (!updatedDoc) {
+          // Document was not in MongoDB (e.g. seed member or custom string ID). Insert/upsert it!
+          const now = new Date().toISOString();
+          const newDoc = {
+            id: String(id),
+            _id: ObjectId.isValid(id) && id.length === 24 ? new ObjectId(id) : String(id),
+            name: name ? name.trim() : "",
+            role: role ? role.trim() : "",
+            team_id: teamId || "web",
+            team_name: teamName || "",
+            responsibilities: responsibilities || [],
+            image_url: imageUrl || null,
+            sort_order: sortOrder || 0,
+            created_at: now,
+            updated_at: now,
+            ...updates,
+          };
+          await db.collection("team_members").insertOne(newDoc);
+        }
       }
     } catch (dbErr) {
       console.error("MongoDB background update error:", dbErr?.message);

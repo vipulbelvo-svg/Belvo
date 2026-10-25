@@ -177,7 +177,7 @@ function TeamGroup({ team }: { team: TeamEntry }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
         {team.members.map((member, i) => (
           <MemberCard
-            key={member.name} name={member.name} team={team.name}
+            key={member.name} name={member.name} team={member.role?.trim() || team.name}
             color={team.color} lightColor={team.lightColor}
             responsibilities={member.responsibilities}
             imageUrl={member.imageUrl}

@@ -197,6 +197,8 @@ export function mergeTeamsWithCloud(
     deptMap.set(d.id, d);
   }
 
+  const matchedDbIds = new Set<string>();
+
   const result: TeamEntry[] = baseTeams.map((seedTeam) => {
     const dbDept = deptMap.get(seedTeam.id);
     const dbForTeam = byTeamId.get(seedTeam.id) ?? [];
@@ -205,12 +207,18 @@ export function mergeTeamsWithCloud(
     const patchedMembers: TeamMemberEntry[] = seedTeam.members.map((sm) => {
       existingNames.add(sm.name.toLowerCase().trim());
       const match = dbForTeam.find(
-        (dm) => dm.name.toLowerCase().trim() === sm.name.toLowerCase().trim()
+        (dm) =>
+          String(dm.id) === String(sm.id) ||
+          dm.name.toLowerCase().trim() === sm.name.toLowerCase().trim()
       );
       if (match) {
+        matchedDbIds.add(String(match.id));
+        existingNames.add(match.name.toLowerCase().trim());
         return {
           ...sm,
           id: String(match.id),
+          name: match.name || sm.name,
+          role: match.role !== undefined ? match.role : sm.role,
           imageUrl: resolveImageUrl(match.image_url) ?? sm.imageUrl,
           responsibilities: match.responsibilities?.length ? match.responsibilities : sm.responsibilities,
         };
@@ -219,14 +227,18 @@ export function mergeTeamsWithCloud(
     });
 
     const newMembers: TeamMemberEntry[] = dbForTeam
-      .filter((dm) => !existingNames.has(dm.name.toLowerCase().trim()))
-      .map((dm) => ({
-        id: String(dm.id),
-        name: dm.name,
-        imageUrl: resolveImageUrl(dm.image_url),
-        responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
-        isCustom: true,
-      }));
+      .filter((dm) => !matchedDbIds.has(String(dm.id)) && !existingNames.has(dm.name.toLowerCase().trim()))
+      .map((dm) => {
+        matchedDbIds.add(String(dm.id));
+        return {
+          id: String(dm.id),
+          name: dm.name,
+          role: dm.role,
+          imageUrl: resolveImageUrl(dm.image_url),
+          responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
+          isCustom: true,
+        };
+      });
 
     return {
       ...seedTeam,
@@ -247,15 +259,40 @@ export function mergeTeamsWithCloud(
         name: d.name,
         color: d.color,
         lightColor: d.light_color,
-        members: dbForTeam.map((dm) => ({
+        members: dbForTeam.map((dm) => {
+          matchedDbIds.add(String(dm.id));
+          return {
+            id: String(dm.id),
+            name: dm.name,
+            role: dm.role,
+            imageUrl: resolveImageUrl(dm.image_url),
+            responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
+            isCustom: true,
+          };
+        }),
+      });
+      existingTeamIds.add(d.id);
+    }
+  }
+
+  // Also catch any DB members whose team_id was created dynamically without a dept record
+  for (const [tid, members] of byTeamId.entries()) {
+    if (!existingTeamIds.has(tid)) {
+      result.push({
+        id: tid,
+        name: members[0]?.team_name || tid,
+        color: "#0b3b9c",
+        lightColor: "#5ba9e6",
+        members: members.map((dm) => ({
           id: String(dm.id),
           name: dm.name,
+          role: dm.role,
           imageUrl: resolveImageUrl(dm.image_url),
           responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
           isCustom: true,
         })),
       });
-      existingTeamIds.add(d.id);
+      existingTeamIds.add(tid);
     }
   }
 
@@ -344,14 +381,17 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       const seedNames = new Set<string>();
       SEED_TEAMS.forEach((t) => t.members.forEach((m) => seedNames.add(m.name.toLowerCase().trim())));
       const dbNames = new Set(dbMembers.map((m) => m.name.toLowerCase().trim()));
+      const dbIds = new Set(dbMembers.map((m) => String(m.id)));
 
       for (const t of localTeams) {
         for (const m of t.members) {
           const norm = m.name.toLowerCase().trim();
-          if (!seedNames.has(norm) && !dbNames.has(norm)) {
+          const hasInDb = dbIds.has(String(m.id)) || dbNames.has(norm);
+          if (m.isCustom && !hasInDb) {
             try {
               const saved = await createMember({
                 name: m.name,
+                role: m.role,
                 teamId: t.id,
                 teamName: t.name,
                 responsibilities: m.responsibilities,
@@ -359,6 +399,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
               });
               dbMembers.push(saved);
               dbNames.add(norm);
+              dbIds.add(String(saved.id));
             } catch (e) {
               console.warn("Backfill to cloud failed for member:", m.name, e);
             }
@@ -433,69 +474,82 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const addMember = useCallback(async (teamId: string, member: Omit<TeamMemberEntry, "id">) => {
     const tempId = `temp-${uid()}`;
     const newMember: TeamMemberEntry = { ...member, id: tempId, isCustom: true };
-    const currentTeams = teams.map((t) =>
-      t.id === teamId ? { ...t, members: [...t.members, newMember] } : t
-    );
-    commit(currentTeams);
+    setTeams((prev) => {
+      const next = prev.map((t) =>
+        t.id === teamId ? { ...t, members: [...t.members, newMember] } : t
+      );
+      saveTeams(next);
+      return next;
+    });
 
     try {
       const dept = teams.find((t) => t.id === teamId);
       const saved = await createMember({
         name: member.name,
+        role: member.role,
         teamId,
         teamName: dept?.name || teamId,
         responsibilities: member.responsibilities,
         imageUrl: member.imageUrl || undefined,
       });
 
-      setTeams((prev) => {
-        const next = prev.map((t) =>
-          t.id === teamId
-            ? {
-                ...t,
-                members: t.members.map((m) =>
-                  m.id === tempId ? { ...m, id: String(saved.id) } : m
-                ),
-              }
-            : t
-        );
-        saveTeams(next);
-        return next;
-      });
+      if (saved && saved.id) {
+        setTeams((prev) => {
+          const next = prev.map((t) =>
+            t.id === teamId
+              ? {
+                  ...t,
+                  members: t.members.map((m) =>
+                    m.id === tempId ? { ...m, id: String(saved.id) } : m
+                  ),
+                }
+              : t
+          );
+          saveTeams(next);
+          return next;
+        });
+      }
     } catch (err) {
       console.warn("Failed to save member to cloud:", err);
     }
-  }, [teams, commit]);
+  }, [teams]);
 
   const updateMember = useCallback(async (teamId: string, memberId: string, patch: Partial<Omit<TeamMemberEntry, "id">>) => {
-    const currentTeams = teams.map((t) =>
-      t.id === teamId
-        ? { ...t, members: t.members.map((m) => (m.id === memberId ? { ...m, ...patch } : m)) }
-        : t
-    );
-    commit(currentTeams);
+    setTeams((prev) => {
+      const next = prev.map((t) =>
+        t.id === teamId
+          ? { ...t, members: t.members.map((m) => (m.id === memberId ? { ...m, ...patch } : m)) }
+          : t
+      );
+      saveTeams(next);
+      return next;
+    });
 
     try {
       const dept = teams.find((t) => t.id === teamId);
       await apiUpdateMember(memberId, {
         name: patch.name,
+        role: patch.role,
         teamId,
         teamName: dept?.name || teamId,
         responsibilities: patch.responsibilities,
-        imageUrl: patch.imageUrl || undefined,
+        imageUrl: patch.imageUrl !== undefined ? (patch.imageUrl || "") : undefined,
       });
     } catch (err) {
       console.warn("Failed to sync update to cloud:", err);
     }
-  }, [teams, commit]);
+  }, [teams]);
 
   const removeMember = useCallback(async (teamId: string, memberId: string) => {
-    const currentTeams = teams.map((t) =>
-      t.id === teamId
-        ? { ...t, members: t.members.filter((m) => m.id !== memberId) }
-        : t
-    );
-    commit(currentTeams);
+    setTeams((prev) => {
+      const next = prev.map((t) =>
+        t.id === teamId
+          ? { ...t, members: t.members.filter((m) => m.id !== memberId) }
+          : t
+      );
+      saveTeams(next);
+      return next;
+    });
 
     try {
       await apiDeleteMember(memberId);

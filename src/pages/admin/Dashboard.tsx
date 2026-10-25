@@ -150,6 +150,7 @@ function MemberForm({
   departments: Department[];
   onSave: (data: {
     name: string;
+    role?: string;
     teamId: string;
     teamName: string;
     responsibilities: string[];
@@ -158,13 +159,14 @@ function MemberForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name || "");
+  const [role, setRole] = useState(initial?.role || "");
   const [teamId, setTeamId] = useState(initial?.team_id || (departments[0]?.id || "web"));
   const [responsibilitiesStr, setResponsibilitiesStr] = useState(
     initial?.responsibilities?.join(", ") || ""
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>(
-    initial?.image_url ? `${IMG_BASE}${initial.image_url}` : ""
+    initial?.image_url ? (initial.image_url.startsWith("http") || initial.image_url.startsWith("data:") ? initial.image_url : `${IMG_BASE}${initial.image_url}`) : ""
   );
   const [saving, setSaving] = useState(false);
 
@@ -186,6 +188,7 @@ function MemberForm({
     try {
       await onSave({
         name: name.trim(),
+        role: role.trim() || undefined,
         teamId,
         teamName,
         responsibilities: responsibilitiesStr
@@ -221,6 +224,30 @@ function MemberForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="Full name"
           required
+          style={inputStyle}
+          onFocus={(e) => (e.target.style.borderColor = "#9D4EDD66")}
+          onBlur={(e) => (e.target.style.borderColor = "#1f1f2a")}
+        />
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <label
+          style={{
+            display: "block",
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "0.65rem",
+            fontWeight: 600,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            color: "#9ca3af",
+            marginBottom: 6,
+          }}
+        >
+          Role / Title
+        </label>
+        <input
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          placeholder="e.g. Intern, Team Lead, Associate"
           style={inputStyle}
           onFocus={(e) => (e.target.style.borderColor = "#9D4EDD66")}
           onBlur={(e) => (e.target.style.borderColor = "#1f1f2a")}
@@ -448,7 +475,7 @@ function MemberCard({
   onDelete: () => void;
 }) {
   const imgUrl = member.image_url
-    ? member.image_url.startsWith("http")
+    ? member.image_url.startsWith("http") || member.image_url.startsWith("data:")
       ? member.image_url
       : `${IMG_BASE}${member.image_url}`
     : getLocalImage(member.name) || "";
@@ -691,6 +718,7 @@ export default function AdminDashboard() {
 
   const handleSave = async (data: {
     name: string;
+    role?: string;
     teamId: string;
     teamName: string;
     responsibilities: string[];
@@ -704,6 +732,7 @@ export default function AdminDashboard() {
     if (editingMember) {
       await updateMember(editingMember.id, {
         name: data.name,
+        role: data.role || "",
         teamId: data.teamId,
         teamName: data.teamName,
         responsibilities: data.responsibilities,
@@ -713,6 +742,7 @@ export default function AdminDashboard() {
     } else {
       await createMember({
         name: data.name,
+        role: data.role || "",
         teamId: data.teamId,
         teamName: data.teamName,
         responsibilities: data.responsibilities,
