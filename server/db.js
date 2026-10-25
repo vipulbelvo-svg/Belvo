@@ -10,19 +10,24 @@ let _db = undefined;
 const FALLBACK_MONGODB_URI =
   "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&replicaSet=atlas-l6d21t-shard-0&authSource=admin&retryWrites=true&w=majority";
 
+function getValidMongoUri() {
+  let envUri = (process.env.MONGODB_URI || "").trim();
+  if ((envUri.startsWith('"') && envUri.endsWith('"')) || (envUri.startsWith("'") && envUri.endsWith("'"))) {
+    envUri = envUri.slice(1, -1).trim();
+  }
+  if (envUri.startsWith("mongodb://") || envUri.startsWith("mongodb+srv://")) {
+    return envUri;
+  }
+  return FALLBACK_MONGODB_URI;
+}
+
 function getClient() {
   if (_client === undefined) {
-    const uri = process.env.MONGODB_URI || FALLBACK_MONGODB_URI;
-
-    if (!uri) {
-      console.error("Missing MongoDB credentials. Set MONGODB_URI.");
-      _client = null;
-    } else {
-      _client = new MongoClient(uri, {
-        serverSelectionTimeoutMS: 8000,
-        connectTimeoutMS: 15000,
-      });
-    }
+    const uri = getValidMongoUri();
+    _client = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 8000,
+    });
   }
   return _client;
 }

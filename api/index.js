@@ -91,17 +91,24 @@ const FALLBACK_MONGODB_URI =
 let _client;
 let _db;
 
+function getValidMongoUri() {
+  let envUri = (process.env.MONGODB_URI || "").trim();
+  if ((envUri.startsWith('"') && envUri.endsWith('"')) || (envUri.startsWith("'") && envUri.endsWith("'"))) {
+    envUri = envUri.slice(1, -1).trim();
+  }
+  if (envUri.startsWith("mongodb://") || envUri.startsWith("mongodb+srv://")) {
+    return envUri;
+  }
+  return FALLBACK_MONGODB_URI;
+}
+
 function getClient() {
   if (_client === undefined) {
-    const uri = process.env.MONGODB_URI || FALLBACK_MONGODB_URI;
-    if (!uri) {
-      _client = null;
-    } else {
-      _client = new MongoClient(uri, {
-        serverSelectionTimeoutMS: 3000,
-        connectTimeoutMS: 4000,
-      });
-    }
+    const uri = getValidMongoUri();
+    _client = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 4000,
+    });
   }
   return _client;
 }
