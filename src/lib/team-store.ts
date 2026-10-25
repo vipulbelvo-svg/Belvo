@@ -80,6 +80,20 @@ export const SEED_TEAMS: TeamEntry[] = [
     ],
   },
   {
+    id: "hr",
+    name: "HR",
+    color: "#d97706",
+    lightColor: "#f59e0b",
+    members: [],
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    color: "#0b3b9c",
+    lightColor: "#5ba9e6",
+    members: [],
+  },
+  {
     id: "web",
     name: "Web Development",
     color: "#0b3b9c",
@@ -161,20 +175,6 @@ export const SEED_TEAMS: TeamEntry[] = [
     color: "#0b3b9c",
     lightColor: "#5ba9e6",
     members: ["Adarsh"].map((n) => makeMember(n)),
-  },
-  {
-    id: "hr",
-    name: "HR",
-    color: "#d97706",
-    lightColor: "#f59e0b",
-    members: [],
-  },
-  {
-    id: "marketing",
-    name: "Marketing",
-    color: "#0b3b9c",
-    lightColor: "#5ba9e6",
-    members: [],
   },
   {
     id: "full-stack",
@@ -376,6 +376,13 @@ export function mergeTeamsWithCloud(
     }
   }
 
+  const baseOrderMap = new Map(baseTeams.map((t, idx) => [t.id, idx]));
+  result.sort((a, b) => {
+    const orderA = deptMap.get(a.id)?.sort_order ?? (baseOrderMap.has(a.id) ? baseOrderMap.get(a.id)! + 1 : 999);
+    const orderB = deptMap.get(b.id)?.sort_order ?? (baseOrderMap.has(b.id) ? baseOrderMap.get(b.id)! + 1 : 999);
+    return orderA - orderB;
+  });
+
   return result;
 }
 
@@ -429,13 +436,20 @@ function loadTeams(): TeamEntry[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return SEED_TEAMS;
     const parsed = JSON.parse(raw) as TeamEntry[];
-    return parsed.map((t) => ({
-      ...t,
-      members: t.members.map((m) => ({
-        ...m,
-        id: m.id || m.name.toLowerCase().replace(/\s+/g, "-"),
-      })),
-    }));
+    const orderMap = new Map(SEED_TEAMS.map((st, i) => [st.id, i]));
+    return parsed
+      .map((t) => ({
+        ...t,
+        members: t.members.map((m) => ({
+          ...m,
+          id: m.id || m.name.toLowerCase().replace(/\s+/g, "-"),
+        })),
+      }))
+      .sort((a, b) => {
+        const idxA = orderMap.has(a.id) ? orderMap.get(a.id)! : 999;
+        const idxB = orderMap.has(b.id) ? orderMap.get(b.id)! : 999;
+        return idxA - idxB;
+      });
   } catch {
     return SEED_TEAMS;
   }
