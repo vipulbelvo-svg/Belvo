@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  validate: { xForwardedForHeader: false },
   message: { success: false, message: "Too many login attempts. Try again in 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -12,6 +13,7 @@ export const authLimiter = rateLimit({
 export const otpLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 3,
+  validate: { xForwardedForHeader: false },
   message: { success: false, message: "Too many OTP requests. Try again in 1 minute." },
   standardHeaders: true,
   legacyHeaders: false,
