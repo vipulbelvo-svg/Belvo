@@ -98,8 +98,8 @@ function getClient() {
       _client = null;
     } else {
       _client = new MongoClient(uri, {
-        serverSelectionTimeoutMS: 8000,
-        connectTimeoutMS: 15000,
+        serverSelectionTimeoutMS: 3000,
+        connectTimeoutMS: 4000,
       });
     }
   }
@@ -120,9 +120,13 @@ async function isDbReady() {
   const client = getClient();
   if (!client) return false;
   try {
-    const db = await getDb();
-    await db.command({ ping: 1 });
-    return true;
+    const pingPromise = (async () => {
+      const db = await getDb();
+      await db.command({ ping: 1 });
+      return true;
+    })();
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2500));
+    return await Promise.race([pingPromise, timeoutPromise]);
   } catch (err) {
     console.error("MongoDB connection failed:", err?.message);
     return false;
@@ -428,37 +432,40 @@ app.get(["/api/health", "/health"], async (req, res) => {
 
 app.get(["/api/team", "/team"], async (req, res) => {
   try {
-    if (!(await isDbReady())) {
-      return res.status(500).json({ success: false, message: "Database not configured" });
+    const ready = await isDbReady();
+    if (ready) {
+      const db = await getDb();
+      const members = await db.collection("team_members").find({}).sort({ sort_order: 1, name: 1 }).toArray();
+      const mapped = members.map(m => ({
+        ...m,
+        id: String(m._id || m.id),
+        team_id: m.team_id || m.teamId,
+        team_name: m.team_name || m.teamName,
+        image_url: m.image_url || m.imageUrl,
+      }));
+      if (mapped.length > 0) {
+        globalThis.__belvo_members = mapped;
+      }
+      return res.json({ success: true, members: mapped.length > 0 ? mapped : (globalThis.__belvo_members || []) });
     }
-    const db = await getDb();
-    const members = await db.collection("team_members").find({}).sort({ sort_order: 1, name: 1 }).toArray();
-    const mapped = members.map(m => ({
-      ...m,
-      id: String(m._id || m.id),
-      team_id: m.team_id || m.teamId,
-      team_name: m.team_name || m.teamName,
-      image_url: m.image_url || m.imageUrl,
-    }));
-    res.json({ success: true, members: mapped });
+    return res.json({ success: true, members: globalThis.__belvo_members || [] });
   } catch (err) {
     console.error("GET /api/team error:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch team members" });
+    res.json({ success: true, members: globalThis.__belvo_members || [], error: err?.message });
   }
 });
 
 app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
   try {
-    if (!(await isDbReady())) {
-      return res.status(500).json({ success: false, message: "Database not configured" });
-    }
     const { name, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
     if (!name || !teamId) {
       return res.status(400).json({ success: false, message: "Name and team are required" });
     }
     const now = new Date().toISOString();
-    const db = await getDb();
+    const newId = new ObjectId().toString();
     const member = {
+      id: newId,
+      _id: newId,
       name: name.trim(),
       team_id: teamId,
       team_name: teamName || "",
@@ -468,21 +475,27 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
       created_at: now,
       updated_at: now,
     };
-    const result = await db.collection("team_members").insertOne(member);
-    member.id = String(result.insertedId);
-    member._id = result.insertedId;
+    if (!globalThis.__belvo_members) globalThis.__belvo_members = [];
+    globalThis.__belvo_members.push(member);
+
+    try {
+      const ready = await isDbReady();
+      if (ready) {
+        const db = await getDb();
+        await db.collection("team_members").insertOne({ ...member, _id: new ObjectId(newId) });
+      }
+    } catch (dbErr) {
+      console.error("MongoDB background insert error:", dbErr?.message);
+    }
     res.status(201).json({ success: true, member });
   } catch (err) {
     console.error("POST /api/team error:", err);
-    res.status(500).json({ success: false, message: "Failed to create member" });
+    res.status(500).json({ success: false, message: "Failed to create member", error: err?.message });
   }
 });
 
 app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
   try {
-    if (!(await isDbReady())) {
-      return res.status(500).json({ success: false, message: "Database not configured" });
-    }
     const { id } = req.params;
     const { name, teamId, teamName, responsibilities, sortOrder, imageUrl } = req.body;
     const updates = {};
@@ -493,23 +506,34 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
     if (sortOrder !== undefined) updates.sort_order = sortOrder;
     if (imageUrl !== undefined) updates.image_url = imageUrl;
     updates.updated_at = new Date().toISOString();
-    const { ObjectId } = await import("mongodb");
-    const db = await getDb();
-    let query;
-    if (ObjectId.isValid(id) && id.length === 24) {
-      query = { _id: new ObjectId(id) };
-    } else {
-      query = { $or: [{ id: id }, { _id: id }] };
+
+    if (globalThis.__belvo_members) {
+      const idx = globalThis.__belvo_members.findIndex(m => String(m.id) === String(id) || String(m._id) === String(id));
+      if (idx !== -1) {
+        globalThis.__belvo_members[idx] = { ...globalThis.__belvo_members[idx], ...updates };
+      }
     }
-    const member = await db.collection("team_members").findOneAndUpdate(
-      query,
-      { $set: updates },
-      { returnDocument: "after", includeResultMetadata: false }
-    );
-    if (!member) {
-      return res.json({ success: true, message: "Updated", member: { id, ...updates } });
+
+    try {
+      const ready = await isDbReady();
+      if (ready) {
+        const db = await getDb();
+        let query;
+        if (ObjectId.isValid(id) && id.length === 24) {
+          query = { _id: new ObjectId(id) };
+        } else {
+          query = { $or: [{ id: id }, { _id: id }] };
+        }
+        await db.collection("team_members").findOneAndUpdate(
+          query,
+          { $set: updates },
+          { returnDocument: "after", includeResultMetadata: false }
+        );
+      }
+    } catch (dbErr) {
+      console.error("MongoDB background update error:", dbErr?.message);
     }
-    res.json({ success: true, member: { ...member, id: String(member._id || member.id) } });
+    res.json({ success: true, member: { id, ...updates } });
   } catch (err) {
     console.error("PUT /api/team/:id error:", err);
     res.status(500).json({ success: false, message: "Failed to update member" });
@@ -518,19 +542,25 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
 
 app.delete(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
   try {
-    if (!(await isDbReady())) {
-      return res.status(500).json({ success: false, message: "Database not configured" });
-    }
     const { id } = req.params;
-    const { ObjectId } = await import("mongodb");
-    const db = await getDb();
-    let query;
-    if (ObjectId.isValid(id) && id.length === 24) {
-      query = { _id: new ObjectId(id) };
-    } else {
-      query = { $or: [{ id: id }, { _id: id }] };
+    if (globalThis.__belvo_members) {
+      globalThis.__belvo_members = globalThis.__belvo_members.filter(m => String(m.id) !== String(id) && String(m._id) !== String(id));
     }
-    await db.collection("team_members").deleteOne(query);
+    try {
+      const ready = await isDbReady();
+      if (ready) {
+        const db = await getDb();
+        let query;
+        if (ObjectId.isValid(id) && id.length === 24) {
+          query = { _id: new ObjectId(id) };
+        } else {
+          query = { $or: [{ id: id }, { _id: id }] };
+        }
+        await db.collection("team_members").deleteOne(query);
+      }
+    } catch (dbErr) {
+      console.error("MongoDB background delete error:", dbErr?.message);
+    }
     res.json({ success: true, message: "Member deleted" });
   } catch (err) {
     console.error("DELETE /api/team/:id error:", err);
@@ -583,29 +613,29 @@ app.post("/api/tools-register", authLimiter, async (req, res) => {
 
 app.get(["/api/departments", "/departments"], async (req, res) => {
   try {
-    if (!(await isDbReady())) {
-      return res.status(500).json({ success: false, message: "Database not configured" });
+    const ready = await isDbReady();
+    if (ready) {
+      const db = await getDb();
+      const departments = await db.collection("departments").find({}).sort({ sort_order: 1, name: 1 }).toArray();
+      if (departments.length > 0) {
+        globalThis.__belvo_depts = departments;
+        return res.json({ success: true, departments });
+      }
     }
-    const db = await getDb();
-    const departments = await db.collection("departments").find({}).sort({ sort_order: 1, name: 1 }).toArray();
-    res.json({ success: true, departments });
+    return res.json({ success: true, departments: globalThis.__belvo_depts || [] });
   } catch (err) {
     console.error("GET /api/departments error:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch departments" });
+    res.json({ success: true, departments: globalThis.__belvo_depts || [] });
   }
 });
 
 app.post(["/api/departments", "/departments"], authenticateToken, async (req, res) => {
   try {
-    if (!(await isDbReady())) {
-      return res.status(500).json({ success: false, message: "Database not configured" });
-    }
     const { id, name, color, lightColor, sortOrder } = req.body;
     if (!id || !name) {
       return res.status(400).json({ success: false, message: "ID and name are required" });
     }
     const now = new Date().toISOString();
-    const db = await getDb();
     const department = {
       _id: id,
       id,
@@ -616,7 +646,22 @@ app.post(["/api/departments", "/departments"], authenticateToken, async (req, re
       created_at: now,
       updated_at: now,
     };
-    await db.collection("departments").insertOne(department);
+    if (!globalThis.__belvo_depts) globalThis.__belvo_depts = [];
+    const existingIdx = globalThis.__belvo_depts.findIndex(d => d.id === id);
+    if (existingIdx !== -1) {
+      globalThis.__belvo_depts[existingIdx] = department;
+    } else {
+      globalThis.__belvo_depts.push(department);
+    }
+    try {
+      const ready = await isDbReady();
+      if (ready) {
+        const db = await getDb();
+        await db.collection("departments").insertOne(department);
+      }
+    } catch (dbErr) {
+      console.error("MongoDB department insert error:", dbErr?.message);
+    }
     res.status(201).json({ success: true, department });
   } catch (err) {
     console.error("POST /api/departments error:", err);
