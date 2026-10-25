@@ -57,6 +57,29 @@ function makeMember(name: string, extra: Partial<TeamMemberEntry> = {}): TeamMem
 
 export const SEED_TEAMS: TeamEntry[] = [
   {
+    id: "admin",
+    name: "Administration",
+    color: "#007BFF",
+    lightColor: "#0056b3",
+    responsibilities: ["Operations", "Team Coordination", "Client Communication", "Internal Management"],
+    members: [
+      makeMember("Mohd Usaid Ali Khan"),
+      makeMember("Raavula Vaibhav"),
+      makeMember("Achintya Gurba", {
+        role: "Operational Manager",
+        responsibilities: ["Daily Operations", "Process Improvement", "Team Coordination", "Quality Assurance"],
+      }),
+      makeMember("Chetan Pawar", {
+        role: "Operational Manager",
+        responsibilities: ["Daily Operations", "Process Improvement", "Team Coordination", "Quality Assurance"],
+      }),
+      makeMember("Vivek Khalia", {
+        role: "Founder Associate",
+        responsibilities: ["Strategic Execution", "Process Optimization", "Partnership Development", "Performance Tracking"],
+      }),
+    ],
+  },
+  {
     id: "web",
     name: "Web Development",
     color: "#0b3b9c",
@@ -138,29 +161,6 @@ export const SEED_TEAMS: TeamEntry[] = [
     color: "#0b3b9c",
     lightColor: "#5ba9e6",
     members: ["Adarsh"].map((n) => makeMember(n)),
-  },
-  {
-    id: "admin",
-    name: "Administration",
-    color: "#007BFF",
-    lightColor: "#0056b3",
-    responsibilities: ["Operations", "Team Coordination", "Client Communication", "Internal Management"],
-    members: [
-      makeMember("Mohd Usaid Ali Khan"),
-      makeMember("Raavula Vaibhav"),
-      makeMember("Achintya Gurba", {
-        role: "Operational Manager",
-        responsibilities: ["Daily Operations", "Process Improvement", "Team Coordination", "Quality Assurance"],
-      }),
-      makeMember("Chetan Pawar", {
-        role: "Operational Manager",
-        responsibilities: ["Daily Operations", "Process Improvement", "Team Coordination", "Quality Assurance"],
-      }),
-      makeMember("Vivek Khalia", {
-        role: "Founder Associate",
-        responsibilities: ["Strategic Execution", "Process Optimization", "Partnership Development", "Performance Tracking"],
-      }),
-    ],
   },
   {
     id: "hr",

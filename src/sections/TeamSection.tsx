@@ -114,27 +114,25 @@ function AdminGroup({ adminTeam }: { adminTeam?: TeamEntry }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
-  if (!adminTeam) return null;
+  if (!adminTeam || adminTeam.members.length === 0) return null;
 
   return (
     <div ref={ref} style={{ marginBottom: "64px", width: "100%" }}>
       <motion.div
         custom={0} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
-        style={{ display: "flex", alignItems: "center", marginBottom: 40, marginTop: 16 }}
+        style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}
       >
-        <div style={{ flex: 1, height: 1, background: "var(--belvo-border-card)" }} />
-        <span style={{
-          fontFamily: "'Inter', sans-serif", fontSize: "0.62rem", fontWeight: 600,
-          letterSpacing: "0.22em", textTransform: "uppercase", color: "#007BFF",
-          background: "rgba(0, 123, 255, 0.1)", border: "0.5px solid rgba(0, 123, 255, 0.3)",
-          borderRadius: "100px", padding: "5px 16px", margin: "0 16px",
-        }}>
-          ADMINISTRATION
+        <div style={{ width: 3, height: 22, background: `linear-gradient(180deg, ${adminTeam.color}, transparent)`, borderRadius: 2, flexShrink: 0 }} />
+        <h3 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.15rem)", color: "var(--belvo-text-1)", margin: 0, letterSpacing: "-0.01em" }}>
+          {adminTeam.name}
+        </h3>
+        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${adminTeam.color}28, transparent)` }} />
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--belvo-text-4)" }}>
+          {adminTeam.members.length} {adminTeam.members.length <= 1 ? "member" : "members"}
         </span>
-        <div style={{ flex: 1, height: 1, background: "var(--belvo-border-card)" }} />
       </motion.div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 240px))", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
         {adminTeam.members.map((member, i) => (
           <MemberCard
             key={member.id || member.name}
@@ -145,7 +143,7 @@ function AdminGroup({ adminTeam }: { adminTeam?: TeamEntry }) {
             responsibilities={member.responsibilities ?? adminTeam.responsibilities}
             imageUrl={member.imageUrl}
             inView={inView}
-            index={i}
+            index={i + 1}
           />
         ))}
       </div>
@@ -256,11 +254,11 @@ export default function TeamSection() {
             </motion.p>
           </div>
 
+          {adminTeam && <AdminGroup adminTeam={adminTeam} />}
+
           {regularTeams.map((team) => (
             <TeamGroup key={team.id} team={team} />
           ))}
-
-          <AdminGroup adminTeam={adminTeam} />
         </div>
       </section>
     </>
