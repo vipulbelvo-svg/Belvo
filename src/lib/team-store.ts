@@ -57,6 +57,17 @@ function makeMember(name: string, extra: Partial<TeamMemberEntry> = {}): TeamMem
 
 export const SEED_TEAMS: TeamEntry[] = [
   {
+    id: "founder-and-ceo",
+    name: "Founder and CEO",
+    color: "#dc2626",
+    lightColor: "#f87171",
+    members: [
+      makeMember("Hrishikesh Mishra", {
+        role: "Founder / CEO",
+      }),
+    ],
+  },
+  {
     id: "admin",
     name: "Administration",
     color: "#007BFF",

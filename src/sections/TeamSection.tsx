@@ -110,50 +110,11 @@ function MemberCard({
   );
 }
 
-function AdminGroup({ adminTeam }: { adminTeam?: TeamEntry }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-
-  if (!adminTeam || adminTeam.members.length === 0) return null;
-
-  return (
-    <div ref={ref} style={{ marginBottom: "64px", width: "100%" }}>
-      <motion.div
-        custom={0} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
-        style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}
-      >
-        <div style={{ width: 3, height: 22, background: `linear-gradient(180deg, ${adminTeam.color}, transparent)`, borderRadius: 2, flexShrink: 0 }} />
-        <h3 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.15rem)", color: "var(--belvo-text-1)", margin: 0, letterSpacing: "-0.01em" }}>
-          {adminTeam.name}
-        </h3>
-        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${adminTeam.color}28, transparent)` }} />
-        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--belvo-text-4)" }}>
-          {adminTeam.members.length} {adminTeam.members.length <= 1 ? "member" : "members"}
-        </span>
-      </motion.div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
-        {adminTeam.members.map((member, i) => (
-          <MemberCard
-            key={member.id || member.name}
-            name={member.name}
-            team={member.role ?? adminTeam.name}
-            color={adminTeam.color}
-            lightColor={adminTeam.lightColor}
-            responsibilities={member.responsibilities ?? adminTeam.responsibilities}
-            imageUrl={member.imageUrl}
-            inView={inView}
-            index={i + 1}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function TeamGroup({ team }: { team: TeamEntry }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
+
+  if (team.members.length === 0) return null;
 
   return (
     <div ref={ref} style={{ marginBottom: "64px", width: "100%" }}>
@@ -176,7 +137,7 @@ function TeamGroup({ team }: { team: TeamEntry }) {
           <MemberCard
             key={member.id || member.name} name={member.name} team={member.role?.trim() || team.name}
             color={team.color} lightColor={team.lightColor}
-            responsibilities={member.responsibilities}
+            responsibilities={member.responsibilities ?? team.responsibilities}
             imageUrl={member.imageUrl}
             inView={inView} index={i + 1}
           />
@@ -192,8 +153,7 @@ export default function TeamSection() {
 
   const { teams } = useTeamStore();
 
-  const adminTeam = teams.find((t) => t.id === "admin");
-  const regularTeams = teams.filter((t) => t.id !== "admin" && t.members.length > 0);
+  const visibleTeams = teams.filter((t) => t.members.length > 0);
 
   return (
     <>
@@ -254,9 +214,7 @@ export default function TeamSection() {
             </motion.p>
           </div>
 
-          {adminTeam && <AdminGroup adminTeam={adminTeam} />}
-
-          {regularTeams.map((team) => (
+          {visibleTeams.map((team) => (
             <TeamGroup key={team.id} team={team} />
           ))}
         </div>
