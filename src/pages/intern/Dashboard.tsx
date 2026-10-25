@@ -61,7 +61,36 @@ function getInitials(name: string) {
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((res, rej) => {
     const r = new FileReader();
-    r.onload = () => res(r.result as string);
+    r.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 320;
+        let width = img.width;
+        let height = img.height;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          res(dataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        res(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = () => res(dataUrl);
+      img.src = dataUrl;
+    };
     r.onerror = rej;
     r.readAsDataURL(file);
   });

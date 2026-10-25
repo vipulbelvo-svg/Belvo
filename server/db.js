@@ -8,7 +8,7 @@ let _client = undefined;
 let _db = undefined;
 
 const FALLBACK_MONGODB_URI =
-  "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&replicaSet=atlas-l6d21t-shard-0&authSource=admin&retryWrites=true&w=majority";
+  "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&authSource=admin&retryWrites=true&w=majority";
 
 function getValidMongoUri() {
   let envUri = (process.env.MONGODB_URI || "").trim();
@@ -25,7 +25,7 @@ function getClient() {
   if (_client === undefined) {
     const uri = getValidMongoUri();
     _client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 8000,
       connectTimeoutMS: 8000,
     });
   }

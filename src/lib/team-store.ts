@@ -88,6 +88,13 @@ export const SEED_TEAMS: TeamEntry[] = [
         role: "Founder Associate",
         responsibilities: ["Strategic Execution", "Process Optimization", "Partnership Development", "Performance Tracking"],
       }),
+      makeMember("Mamindla Mayuri", {
+        role: "Team manager",
+      }),
+      makeMember("Pranitha sai", {
+        role: "CBDO",
+      }),
+      makeMember("Vedant Chautiwar"),
     ],
   },
   {
@@ -95,14 +102,25 @@ export const SEED_TEAMS: TeamEntry[] = [
     name: "HR",
     color: "#d97706",
     lightColor: "#f59e0b",
-    members: [],
+    members: [
+      makeMember("Kasetty lavanya", { role: "HR" }),
+      makeMember("Sheth yamani", { role: "HR" }),
+      makeMember("Rachana reddy", { role: "HR" }),
+    ],
   },
   {
     id: "marketing",
     name: "Marketing",
     color: "#0b3b9c",
     lightColor: "#5ba9e6",
-    members: [],
+    members: [
+      makeMember("hema harshitha", { role: "brand outreach and pr team" }),
+      makeMember("Gunjan Umate", { role: "Marketing and outreach intern" }),
+      makeMember("Ramya pathak", { role: "Marketing associate" }),
+      makeMember("Balaka Rasmita Reddy", { role: "Digital marketing" }),
+      makeMember("Arti punia", { role: "brand outreach and PR team" }),
+      makeMember("Smahi Jhang", { role: "Product design" }),
+    ],
   },
   {
     id: "web",
@@ -399,8 +417,8 @@ export function mergeTeamsWithCloud(
 
 // ── Persistence ───────────────────────────────────────
 
-const STORAGE_KEY = "belvo_teams_v1";
-const DELETED_KEY = "belvo_deleted_members_v1";
+const STORAGE_KEY = "belvo_teams_v2";
+const DELETED_KEY = "belvo_deleted_members_v2";
 
 function loadDeleted(): { ids: string[]; names: string[] } {
   try {
@@ -520,6 +538,11 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         fetchTeamData().catch(() => ({ members: [] as TeamMember[], deletedIds: [] as string[], deletedNames: [] as string[] })),
         fetchDepartments().catch(() => [] as Department[]),
       ]);
+
+      if (teamData.members.length === 0 && dbDepts.length === 0) {
+        console.warn("Cloud sync returned empty data; retaining current teams.");
+        return;
+      }
 
       const localDeleted = loadDeleted();
       const allDeletedIds = new Set([...localDeleted.ids, ...(teamData.deletedIds || [])]);

@@ -86,7 +86,7 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024
 
 // Direct standard replica-set MongoDB URI (avoids DNS SRV query failures on cloud lambda runtimes)
 const FALLBACK_MONGODB_URI =
-  "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&replicaSet=atlas-l6d21t-shard-0&authSource=admin&retryWrites=true&w=majority";
+  "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&authSource=admin&retryWrites=true&w=majority";
 
 let _client;
 let _db;
@@ -106,8 +106,8 @@ function getClient() {
   if (_client === undefined) {
     const uri = getValidMongoUri();
     _client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 3000,
-      connectTimeoutMS: 4000,
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
     });
   }
   return _client;
@@ -132,7 +132,7 @@ async function isDbReady() {
       await db.command({ ping: 1 });
       return true;
     })();
-    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2500));
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 8000));
     return await Promise.race([pingPromise, timeoutPromise]);
   } catch (err) {
     console.error("MongoDB connection failed:", err?.message);
