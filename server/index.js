@@ -538,8 +538,23 @@ app.get("/api/health", async (req, res) => {
 
 // ── Team Routes ────────────────────────────────────────
 
+let _localTeamCache = null;
+let _localTeamCacheTime = 0;
+const TEAM_CACHE_TTL = 30000;
+
+function invalidateTeamCache() {
+  _localTeamCache = null;
+  _localTeamCacheTime = 0;
+}
+
 // GET /api/team — List all members
 app.get(["/api/team", "/team"], async (req, res) => {
+  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
+  const now = Date.now();
+  if (_localTeamCache && (now - _localTeamCacheTime < TEAM_CACHE_TTL)) {
+    return res.json(_localTeamCache);
+  }
+
   try {
     if (!(await isDbReady())) {
       return res.status(500).json({ success: false, message: "Database not configured" });
@@ -575,7 +590,10 @@ app.get(["/api/team", "/team"], async (req, res) => {
       }))
       .filter((m) => !deletedIds.includes(m.id) && !deletedNames.includes(m.name.toLowerCase().trim()));
 
-    res.json({ success: true, members: mapped, deletedIds, deletedNames });
+    const payload = { success: true, members: mapped, deletedIds, deletedNames };
+    _localTeamCache = payload;
+    _localTeamCacheTime = now;
+    res.json(payload);
   } catch (err) {
     console.error("GET /api/team error:", err);
     res.status(500).json({ success: false, message: "Failed to fetch team members" });
@@ -625,6 +643,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
         updated_at: now,
       };
       await db.collection("team_members").updateOne({ _id: existing._id }, { $set: updates });
+      invalidateTeamCache();
       const member = { ...existing, ...updates, id: String(existing._id) };
       return res.status(200).json({ success: true, member });
     }
@@ -645,6 +664,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
     member._id = result.insertedId;
     member.id = String(result.insertedId);
 
+    invalidateTeamCache();
     res.status(201).json({ success: true, member });
   } catch (err) {
     console.error("POST /api/team error:", err);
@@ -708,6 +728,7 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
       member = newDoc;
     }
 
+    invalidateTeamCache();
     res.json({ success: true, member: { ...member, id: String(member._id || member.id) } });
   } catch (err) {
     console.error("PUT /api/team/:id error:", err);
@@ -753,6 +774,7 @@ app.delete(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) =
       { upsert: true }
     );
 
+    invalidateTeamCache();
     res.json({ success: true, message: "Member deleted" });
   } catch (err) {
     console.error("DELETE /api/team/:id error:", err);
@@ -832,8 +854,23 @@ app.post("/api/tools-register", authLimiter, async (req, res) => {
   }
 });
 
+let _localDeptsCache = null;
+let _localDeptsCacheTime = 0;
+const DEPTS_CACHE_TTL = 30000;
+
+function invalidateDeptsCache() {
+  _localDeptsCache = null;
+  _localDeptsCacheTime = 0;
+}
+
 // GET /api/departments — List all departments
 app.get("/api/departments", async (req, res) => {
+  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
+  const now = Date.now();
+  if (_localDeptsCache && (now - _localDeptsCacheTime < DEPTS_CACHE_TTL)) {
+    return res.json(_localDeptsCache);
+  }
+
   try {
     if (!(await isDbReady())) {
       return res.status(500).json({ success: false, message: "Database not configured" });
@@ -846,7 +883,10 @@ app.get("/api/departments", async (req, res) => {
       .sort({ sort_order: 1, name: 1 })
       .toArray();
 
-    res.json({ success: true, departments });
+    const payload = { success: true, departments };
+    _localDeptsCache = payload;
+    _localDeptsCacheTime = now;
+    res.json(payload);
   } catch (err) {
     console.error("GET /api/departments error:", err);
     res.status(500).json({ success: false, message: "Failed to fetch departments" });
@@ -880,6 +920,7 @@ app.post("/api/departments", authenticateToken, async (req, res) => {
     };
 
     await db.collection("departments").insertOne(department);
+    invalidateDeptsCache();
 
     res.status(201).json({ success: true, department });
   } catch (err) {
@@ -916,6 +957,7 @@ app.put("/api/departments/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Department not found" });
     }
 
+    invalidateDeptsCache();
     res.json({ success: true, department });
   } catch (err) {
     console.error("PUT /api/departments/:id error:", err);
@@ -950,6 +992,7 @@ app.delete("/api/departments/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Department not found" });
     }
 
+    invalidateDeptsCache();
     res.json({ success: true, message: "Department deleted" });
   } catch (err) {
     console.error("DELETE /api/departments/:id error:", err);

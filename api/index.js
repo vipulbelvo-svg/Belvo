@@ -437,7 +437,31 @@ app.get(["/api/health", "/health"], async (req, res) => {
   res.json({ success: true, db: ready ? "connected" : "not configured", timestamp: new Date().toISOString() });
 });
 
+let _teamCache = null;
+let _teamCacheTime = 0;
+const TEAM_CACHE_TTL = 30000;
+
+function invalidateTeamCache() {
+  _teamCache = null;
+  _teamCacheTime = 0;
+}
+
+let _deptsCache = null;
+let _deptsCacheTime = 0;
+const DEPTS_CACHE_TTL = 30000;
+
+function invalidateDeptsCache() {
+  _deptsCache = null;
+  _deptsCacheTime = 0;
+}
+
 app.get(["/api/team", "/team"], async (req, res) => {
+  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
+  const now = Date.now();
+  if (_teamCache && (now - _teamCacheTime < TEAM_CACHE_TTL)) {
+    return res.json(_teamCache);
+  }
+
   try {
     const ready = await isDbReady();
     if (ready) {
@@ -469,14 +493,18 @@ app.get(["/api/team", "/team"], async (req, res) => {
       if (mapped.length > 0) {
         globalThis.__belvo_members = mapped;
       }
-      return res.json({
+      const responsePayload = {
         success: true,
         members: mapped.length > 0 ? mapped : (globalThis.__belvo_members || []),
         deletedIds,
         deletedNames,
-      });
+      };
+      _teamCache = responsePayload;
+      _teamCacheTime = now;
+      return res.json(responsePayload);
     }
-    return res.json({ success: true, members: globalThis.__belvo_members || [], deletedIds: [], deletedNames: [] });
+    const fallbackPayload = { success: true, members: globalThis.__belvo_members || [], deletedIds: [], deletedNames: [] };
+    return res.json(fallbackPayload);
   } catch (err) {
     console.error("GET /api/team error:", err);
     res.json({ success: true, members: globalThis.__belvo_members || [], deletedIds: [], deletedNames: [], error: err?.message });
@@ -523,6 +551,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
             updated_at: now,
           };
           await db.collection("team_members").updateOne({ _id: existing._id }, { $set: updates });
+          invalidateTeamCache();
           const member = { ...existing, ...updates, id: String(existing._id) };
           return res.status(200).json({ success: true, member });
         }
@@ -542,6 +571,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
           updated_at: now,
         };
         await db.collection("team_members").insertOne(member);
+        invalidateTeamCache();
         return res.status(201).json({ success: true, member: { ...member, id: newId } });
       }
     } catch (dbErr) {
@@ -564,6 +594,7 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
     };
     if (!globalThis.__belvo_members) globalThis.__belvo_members = [];
     globalThis.__belvo_members.push(fallbackMember);
+    invalidateTeamCache();
     res.status(201).json({ success: true, member: fallbackMember });
   } catch (err) {
     console.error("POST /api/team error:", err);
@@ -633,6 +664,7 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
     } catch (dbErr) {
       console.error("MongoDB background update error:", dbErr?.message);
     }
+    invalidateTeamCache();
     res.json({ success: true, member: { id, ...updates } });
   } catch (err) {
     console.error("PUT /api/team/:id error:", err);
@@ -687,6 +719,7 @@ app.delete(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) =
     } catch (dbErr) {
       console.error("MongoDB background delete error:", dbErr?.message);
     }
+    invalidateTeamCache();
     res.json({ success: true, message: "Member deleted" });
   } catch (err) {
     console.error("DELETE /api/team/:id error:", err);
@@ -738,6 +771,12 @@ app.post("/api/tools-register", authLimiter, async (req, res) => {
 });
 
 app.get(["/api/departments", "/departments"], async (req, res) => {
+  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
+  const now = Date.now();
+  if (_deptsCache && (now - _deptsCacheTime < DEPTS_CACHE_TTL)) {
+    return res.json(_deptsCache);
+  }
+
   try {
     const ready = await isDbReady();
     if (ready) {
@@ -745,7 +784,10 @@ app.get(["/api/departments", "/departments"], async (req, res) => {
       const departments = await db.collection("departments").find({}).sort({ sort_order: 1, name: 1 }).toArray();
       if (departments.length > 0) {
         globalThis.__belvo_depts = departments;
-        return res.json({ success: true, departments });
+        const payload = { success: true, departments };
+        _deptsCache = payload;
+        _deptsCacheTime = now;
+        return res.json(payload);
       }
     }
     return res.json({ success: true, departments: globalThis.__belvo_depts || [] });
@@ -788,6 +830,7 @@ app.post(["/api/departments", "/departments"], authenticateToken, async (req, re
     } catch (dbErr) {
       console.error("MongoDB department insert error:", dbErr?.message);
     }
+    invalidateDeptsCache();
     res.status(201).json({ success: true, department });
   } catch (err) {
     console.error("POST /api/departments error:", err);
@@ -817,6 +860,7 @@ app.put(["/api/departments/:id", "/departments/:id"], authenticateToken, async (
     if (!department) {
       return res.status(404).json({ success: false, message: "Department not found" });
     }
+    invalidateDeptsCache();
     res.json({ success: true, department });
   } catch (err) {
     console.error("PUT /api/departments/:id error:", err);
@@ -839,6 +883,7 @@ app.delete(["/api/departments/:id", "/departments/:id"], authenticateToken, asyn
     if (result.deletedCount === 0) {
       return res.status(404).json({ success: false, message: "Department not found" });
     }
+    invalidateDeptsCache();
     res.json({ success: true, message: "Department deleted" });
   } catch (err) {
     console.error("DELETE /api/departments/:id error:", err);
