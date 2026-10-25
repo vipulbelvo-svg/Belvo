@@ -391,7 +391,7 @@ function MemberCard({ member, team }: { member: TeamMemberEntry; team: TeamEntry
   const [confirmDel, setConfirmDel] = useState(false);
 
   const localImg = getTeamMemberImage(member.name);
-  const img = member.imageUrl || localImg;
+  const img = localImg || member.imageUrl;
   const inits = getInitials(member.name);
 
   const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {

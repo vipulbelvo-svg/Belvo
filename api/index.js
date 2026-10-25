@@ -486,7 +486,7 @@ app.get(["/api/team", "/team"], async (req, res) => {
           team_id: m.team_id || m.teamId,
           team_name: m.team_name || m.teamName,
           responsibilities: m.responsibilities || [],
-          image_url: m.image_url || m.imageUrl,
+          image_url: m.image_url && (!m.image_url.startsWith("data:") || m.image_url.length < 50000) ? m.image_url : null,
         }))
         .filter(m => !deletedIds.includes(m.id) && !deletedNames.includes(m.name.toLowerCase().trim()));
 

@@ -28,8 +28,9 @@ function MemberCard({
   imageUrl?: string | null;
 }) {
   const initials = getInitials(name);
-  // Uploaded photo takes top priority; bundled asset photo is fallback only.
-  const img = (imageUrl && imageUrl.trim()) ? imageUrl : getTeamMemberImage(name);
+  // Bundled static asset photo is fast and CDN-cached; falls back to custom cloud URL if added dynamically
+  const localImg = getTeamMemberImage(name);
+  const img = localImg || (imageUrl && imageUrl.trim() ? imageUrl : undefined);
 
   return (
     <motion.div
@@ -65,10 +66,15 @@ function MemberCard({
           position: "relative", overflow: "hidden",
         }}>
           {img ? (
-            <img src={img} alt={name} loading="lazy" style={{
-              width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%",
-              objectPosition: name === "Mohammad Anasuddin Zaid" ? "50% 30%" : "50% 50%",
-            }} />
+            <img
+              src={img}
+              alt={name}
+              decoding="async"
+              style={{
+                width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%",
+                objectPosition: name === "Mohammad Anasuddin Zaid" ? "50% 30%" : "50% 50%",
+              }}
+            />
           ) : (
             <>
               <div style={{ position: "absolute", inset: 4, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.15)" }} />
