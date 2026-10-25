@@ -1,91 +1,7 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { useRef } from "react";
 import { getTeamMemberImage } from "@/lib/team-images";
-import { useTeamStore, type TeamEntry, type TeamMemberEntry } from "@/lib/team-store";
-import { fetchTeam, fetchDepartments, type TeamMember, type Department } from "@/lib/admin-api";
-
-// Resolve a stored image_url to a usable src.
-// Relative paths (e.g. "/uploads/member-xxx.jpg") work fine when the API
-// runs on the same origin (Vercel). We only fall back to an explicit base
-// when VITE_API_URL is explicitly set (e.g. a separate API host).
-const EXPLICIT_API_BASE = import.meta.env.VITE_API_URL ?? "";
-
-function resolveImageUrl(url: string | null | undefined): string | undefined {
-  if (!url) return undefined;
-  if (url.startsWith("http")) return url;
-  // Relative path — prepend explicit base only if configured, otherwise
-  // let the browser resolve it against the current origin.
-  return EXPLICIT_API_BASE ? `${EXPLICIT_API_BASE}${url}` : url;
-}
-
-// Merge DB members into seed teams:
-// - DB members whose name matches a seed member → carry over their imageUrl.
-// - DB members not in seed (new interns) → add them to the right team.
-function mergeDbIntoSeeds(
-  seedTeams: TeamEntry[],
-  dbMembers: TeamMember[],
-  dbDepts: Department[],
-): TeamEntry[] {
-  // Build a lookup: team_id → DB members
-  const byTeamId = new Map<string, TeamMember[]>();
-  for (const m of dbMembers) {
-    const arr = byTeamId.get(m.team_id) ?? [];
-    arr.push(m);
-    byTeamId.set(m.team_id, arr);
-  }
-
-  // For every seed team, patch imageUrl from DB where names match,
-  // and append any DB members that are not yet in seed.
-  const result: TeamEntry[] = seedTeams.map((seedTeam) => {
-    const dbForTeam = byTeamId.get(seedTeam.id) ?? [];
-
-    // Patch existing seed members with DB imageUrl
-    const patchedMembers: TeamMemberEntry[] = seedTeam.members.map((sm) => {
-      const match = dbForTeam.find(
-        (dm) => dm.name.toLowerCase().trim() === sm.name.toLowerCase().trim()
-      );
-      if (match?.image_url) {
-        return { ...sm, imageUrl: resolveImageUrl(match.image_url) };
-      }
-      return sm;
-    });
-
-    // Add new DB members not already in seed
-    const seedNamesLower = new Set(seedTeam.members.map((m) => m.name.toLowerCase().trim()));
-    const newMembers: TeamMemberEntry[] = dbForTeam
-      .filter((dm) => !seedNamesLower.has(dm.name.toLowerCase().trim()))
-      .map((dm) => ({
-        id: String(dm.id),
-        name: dm.name,
-        imageUrl: resolveImageUrl(dm.image_url),
-        responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
-      }));
-
-    return { ...seedTeam, members: [...patchedMembers, ...newMembers] };
-  });
-
-  // Add entirely new teams that exist in DB but not in seed
-  const seedIds = new Set(seedTeams.map((t) => t.id));
-  for (const dept of dbDepts) {
-    if (seedIds.has(dept.id)) continue;
-    const dbForTeam = byTeamId.get(dept.id) ?? [];
-    if (!dbForTeam.length) continue;
-    result.push({
-      id: dept.id,
-      name: dept.name,
-      color: dept.color,
-      lightColor: dept.light_color,
-      members: dbForTeam.map((dm) => ({
-        id: String(dm.id),
-        name: dm.name,
-        imageUrl: resolveImageUrl(dm.image_url),
-        responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
-      })),
-    });
-  }
-
-  return result;
-}
+import { useTeamStore, type TeamEntry } from "@/lib/team-store";
 
 const easeSmooth = [0.22, 1, 0.36, 1] as const;
 void easeSmooth; // referenced for future transitions
@@ -277,29 +193,10 @@ export default function TeamSection() {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true, margin: "-80px" });
 
-  const { teams: seedTeams } = useTeamStore();
+  const { teams } = useTeamStore();
 
-  // Fetch live DB data and merge on top of seed teams so:
-  //  - existing seed members get their DB-uploaded photo
-  //  - new interns (DB-only) appear with their photo
-  const [mergedTeams, setMergedTeams] = useState<TeamEntry[]>(seedTeams);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([fetchTeam(), fetchDepartments()])
-      .then(([dbMembers, dbDepts]) => {
-        if (cancelled) return;
-        setMergedTeams(mergeDbIntoSeeds(seedTeams, dbMembers, dbDepts));
-      })
-      .catch(() => {
-        // API unavailable (local dev without server, etc.) — fall back to seed silently
-      });
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount; seedTeams is stable (from context)
-
-  const adminTeam = mergedTeams.find((t) => t.id === "admin");
-  const regularTeams = mergedTeams.filter((t) => t.id !== "admin");
+  const adminTeam = teams.find((t) => t.id === "admin");
+  const regularTeams = teams.filter((t) => t.id !== "admin");
 
   return (
     <>

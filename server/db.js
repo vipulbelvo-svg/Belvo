@@ -4,22 +4,23 @@ if (!process.env.VERCEL) {
 }
 import { MongoClient, ObjectId } from "mongodb";
 
-// Lazy initialization — process.env is populated by dotenv AFTER ESM imports resolve,
-// so we must read env vars at call time, not at module load time.
 let _client = undefined;
 let _db = undefined;
 
+const FALLBACK_MONGODB_URI =
+  "mongodb+srv://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@cluster0.f4e5dom.mongodb.net/belvo?retryWrites=true&w=majority";
+
 function getClient() {
   if (_client === undefined) {
-    const uri = process.env.MONGODB_URI;
+    const uri = process.env.MONGODB_URI || FALLBACK_MONGODB_URI;
 
     if (!uri) {
       console.error("Missing MongoDB credentials. Set MONGODB_URI.");
       _client = null;
     } else {
       _client = new MongoClient(uri, {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 15000,
       });
     }
   }

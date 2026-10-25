@@ -71,7 +71,7 @@ const emailTransporter = nodemailer.createTransport({
 });
 
 // ── Auth Routes ────────────────────────────────────────
-app.post("/admin/login", authLimiter, async (req, res) => {
+app.post(["/admin/login", "/api/admin/login"], authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -98,7 +98,7 @@ app.post("/admin/login", authLimiter, async (req, res) => {
   }
 });
 
-app.post("/intern/login", authLimiter, async (req, res) => {
+app.post(["/intern/login", "/api/intern/login"], authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     const INTERN_USER = process.env.INTERN_USERNAME || "belvo.internportal";
@@ -539,7 +539,7 @@ app.get("/api/health", async (req, res) => {
 // ── Team Routes ────────────────────────────────────────
 
 // GET /api/team — List all members
-app.get("/api/team", async (req, res) => {
+app.get(["/api/team", "/team"], async (req, res) => {
   try {
     if (!(await isDbReady())) {
       return res.status(500).json({ success: false, message: "Database not configured" });
@@ -552,7 +552,15 @@ app.get("/api/team", async (req, res) => {
       .sort({ sort_order: 1, name: 1 })
       .toArray();
 
-    res.json({ success: true, members });
+    const mapped = members.map((m) => ({
+      ...m,
+      id: String(m._id || m.id),
+      team_id: m.team_id || m.teamId,
+      team_name: m.team_name || m.teamName,
+      image_url: m.image_url || m.imageUrl,
+    }));
+
+    res.json({ success: true, members: mapped });
   } catch (err) {
     console.error("GET /api/team error:", err);
     res.status(500).json({ success: false, message: "Failed to fetch team members" });
@@ -560,7 +568,7 @@ app.get("/api/team", async (req, res) => {
 });
 
 // POST /api/team — Create a new member
-app.post("/api/team", authenticateToken, async (req, res) => {
+app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
   try {
     if (!(await isDbReady())) {
       return res.status(500).json({ success: false, message: "Database not configured" });
@@ -587,7 +595,7 @@ app.post("/api/team", authenticateToken, async (req, res) => {
 
     const result = await db.collection("team_members").insertOne(member);
     member._id = result.insertedId;
-    member.id = result.insertedId;
+    member.id = String(result.insertedId);
 
     res.status(201).json({ success: true, member });
   } catch (err) {
@@ -597,7 +605,7 @@ app.post("/api/team", authenticateToken, async (req, res) => {
 });
 
 // PUT /api/team/:id — Update a member
-app.put("/api/team/:id", authenticateToken, async (req, res) => {
+app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
   try {
     if (!(await isDbReady())) {
       return res.status(500).json({ success: false, message: "Database not configured" });
@@ -617,17 +625,24 @@ app.put("/api/team/:id", authenticateToken, async (req, res) => {
 
     const { ObjectId } = await import("mongodb");
     const db = await getDb();
+    let query;
+    if (ObjectId.isValid(id) && id.length === 24) {
+      query = { _id: new ObjectId(id) };
+    } else {
+      query = { $or: [{ id: id }, { _id: id }] };
+    }
+
     const member = await db.collection("team_members").findOneAndUpdate(
-      { _id: new ObjectId(id) },
+      query,
       { $set: updates },
       { returnDocument: "after", includeResultMetadata: false }
     );
 
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return res.json({ success: true, message: "Updated", member: { id, ...updates } });
     }
 
-    res.json({ success: true, member });
+    res.json({ success: true, member: { ...member, id: String(member._id || member.id) } });
   } catch (err) {
     console.error("PUT /api/team/:id error:", err);
     res.status(500).json({ success: false, message: "Failed to update member" });
@@ -635,7 +650,7 @@ app.put("/api/team/:id", authenticateToken, async (req, res) => {
 });
 
 // DELETE /api/team/:id — Delete a member
-app.delete("/api/team/:id", authenticateToken, async (req, res) => {
+app.delete(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
   try {
     if (!(await isDbReady())) {
       return res.status(500).json({ success: false, message: "Database not configured" });
@@ -644,12 +659,14 @@ app.delete("/api/team/:id", authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { ObjectId } = await import("mongodb");
     const db = await getDb();
-    const result = await db.collection("team_members").deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+    let query;
+    if (ObjectId.isValid(id) && id.length === 24) {
+      query = { _id: new ObjectId(id) };
+    } else {
+      query = { $or: [{ id: id }, { _id: id }] };
     }
 
+    await db.collection("team_members").deleteOne(query);
     res.json({ success: true, message: "Member deleted" });
   } catch (err) {
     console.error("DELETE /api/team/:id error:", err);

@@ -1,8 +1,8 @@
 /**
  * team-store.ts
- * Reactive team data store backed by localStorage.
- * Provides a React context so edits made in the dashboard are instantly
- * reflected on the public TeamSection without a page reload.
+ * Reactive team data store with automatic MongoDB Atlas cloud synchronization.
+ * Synchronizes additions, edits, and deletions across all devices in real-time,
+ * while maintaining local cache for instant offline rendering.
  */
 
 import React, {
@@ -13,17 +13,30 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
+import {
+  fetchTeam,
+  createMember,
+  updateMember as apiUpdateMember,
+  deleteMember as apiDeleteMember,
+  fetchDepartments,
+  createDepartment as apiCreateDepartment,
+  updateDepartment as apiUpdateDepartment,
+  deleteDepartment as apiDeleteDepartment,
+  type TeamMember,
+  type Department,
+} from "./admin-api";
 
 // ── Types ─────────────────────────────────────────────
 
 export interface TeamMemberEntry {
-  /** Unique within the team */
+  /** Unique within the team / MongoDB ID */
   id: string;
   name: string;
-  /** Data-URL (for newly uploaded photos) or null */
+  /** Data-URL (for newly uploaded photos), hosted URL, or null */
   imageUrl?: string | null;
   responsibilities?: string[];
   role?: string;
+  isCustom?: boolean;
 }
 
 export interface TeamEntry {
@@ -41,7 +54,7 @@ function makeMember(name: string, extra: Partial<TeamMemberEntry> = {}): TeamMem
   return { id: name.toLowerCase().replace(/\s+/g, "-"), name, ...extra };
 }
 
-const SEED_TEAMS: TeamEntry[] = [
+export const SEED_TEAMS: TeamEntry[] = [
   {
     id: "web",
     name: "Web Development",
@@ -150,6 +163,105 @@ const SEED_TEAMS: TeamEntry[] = [
   },
 ];
 
+// ── Image resolution helper ───────────────────────────
+
+const EXPLICIT_API_BASE = import.meta.env.VITE_API_URL ?? "";
+
+function resolveImageUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith("http") || url.startsWith("data:")) return url;
+  return EXPLICIT_API_BASE ? `${EXPLICIT_API_BASE}${url}` : url;
+}
+
+// ── Cloud merge helper ────────────────────────────────
+
+export function mergeTeamsWithCloud(
+  baseTeams: TeamEntry[],
+  dbMembers: TeamMember[],
+  dbDepts: Department[]
+): TeamEntry[] {
+  if (!dbMembers.length && !dbDepts.length) {
+    return baseTeams;
+  }
+
+  const byTeamId = new Map<string, TeamMember[]>();
+  for (const m of dbMembers) {
+    const tid = m.team_id || "web";
+    const arr = byTeamId.get(tid) ?? [];
+    arr.push(m);
+    byTeamId.set(tid, arr);
+  }
+
+  const deptMap = new Map<string, Department>();
+  for (const d of dbDepts) {
+    deptMap.set(d.id, d);
+  }
+
+  const result: TeamEntry[] = baseTeams.map((seedTeam) => {
+    const dbDept = deptMap.get(seedTeam.id);
+    const dbForTeam = byTeamId.get(seedTeam.id) ?? [];
+
+    const existingNames = new Set<string>();
+    const patchedMembers: TeamMemberEntry[] = seedTeam.members.map((sm) => {
+      existingNames.add(sm.name.toLowerCase().trim());
+      const match = dbForTeam.find(
+        (dm) => dm.name.toLowerCase().trim() === sm.name.toLowerCase().trim()
+      );
+      if (match) {
+        return {
+          ...sm,
+          id: String(match.id),
+          imageUrl: resolveImageUrl(match.image_url) ?? sm.imageUrl,
+          responsibilities: match.responsibilities?.length ? match.responsibilities : sm.responsibilities,
+        };
+      }
+      return sm;
+    });
+
+    const newMembers: TeamMemberEntry[] = dbForTeam
+      .filter((dm) => !existingNames.has(dm.name.toLowerCase().trim()))
+      .map((dm) => ({
+        id: String(dm.id),
+        name: dm.name,
+        imageUrl: resolveImageUrl(dm.image_url),
+        responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
+        isCustom: true,
+      }));
+
+    return {
+      ...seedTeam,
+      name: dbDept?.name || seedTeam.name,
+      color: dbDept?.color || seedTeam.color,
+      lightColor: dbDept?.light_color || seedTeam.lightColor,
+      members: [...patchedMembers, ...newMembers],
+    };
+  });
+
+  // Append any departments created in DB that aren't in base
+  const existingTeamIds = new Set(result.map((t) => t.id));
+  for (const d of dbDepts) {
+    if (!existingTeamIds.has(d.id)) {
+      const dbForTeam = byTeamId.get(d.id) ?? [];
+      result.push({
+        id: d.id,
+        name: d.name,
+        color: d.color,
+        lightColor: d.light_color,
+        members: dbForTeam.map((dm) => ({
+          id: String(dm.id),
+          name: dm.name,
+          imageUrl: resolveImageUrl(dm.image_url),
+          responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
+          isCustom: true,
+        })),
+      });
+      existingTeamIds.add(d.id);
+    }
+  }
+
+  return result;
+}
+
 // ── Persistence ───────────────────────────────────────
 
 const STORAGE_KEY = "belvo_teams_v1";
@@ -159,7 +271,6 @@ function loadTeams(): TeamEntry[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return SEED_TEAMS;
     const parsed = JSON.parse(raw) as TeamEntry[];
-    // make sure every member has an id (migrate old data)
     return parsed.map((t) => ({
       ...t,
       members: t.members.map((m) => ({
@@ -188,16 +299,20 @@ function uid(): string {
 
 interface TeamStore {
   teams: TeamEntry[];
+  isSyncing: boolean;
 
   // Department CRUD
-  addTeam(team: Omit<TeamEntry, "members">): void;
-  updateTeam(id: string, patch: Partial<Omit<TeamEntry, "id" | "members">>): void;
-  removeTeam(id: string): void;
+  addTeam(team: Omit<TeamEntry, "members">): Promise<void>;
+  updateTeam(id: string, patch: Partial<Omit<TeamEntry, "id" | "members">>): Promise<void>;
+  removeTeam(id: string): Promise<void>;
 
   // Member CRUD
-  addMember(teamId: string, member: Omit<TeamMemberEntry, "id">): void;
-  updateMember(teamId: string, memberId: string, patch: Partial<Omit<TeamMemberEntry, "id">>): void;
-  removeMember(teamId: string, memberId: string): void;
+  addMember(teamId: string, member: Omit<TeamMemberEntry, "id">): Promise<void>;
+  updateMember(teamId: string, memberId: string, patch: Partial<Omit<TeamMemberEntry, "id">>): Promise<void>;
+  removeMember(teamId: string, memberId: string): Promise<void>;
+
+  // Refresh from cloud
+  refreshTeams(): Promise<void>;
 
   // Reset
   resetToDefaults(): void;
@@ -207,46 +322,186 @@ const TeamContext = createContext<TeamStore | null>(null);
 
 export function TeamProvider({ children }: { children: ReactNode }) {
   const [teams, setTeams] = useState<TeamEntry[]>(loadTeams);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const commit = useCallback((next: TeamEntry[]) => {
     setTeams(next);
     saveTeams(next);
   }, []);
 
-  const addTeam = useCallback((team: Omit<TeamEntry, "members">) => {
+  // Sync with cloud on mount, on focus, and on schedule
+  const syncWithCloud = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const [dbMembers, dbDepts] = await Promise.all([
+        fetchTeam().catch(() => [] as TeamMember[]),
+        fetchDepartments().catch(() => [] as Department[]),
+      ]);
+
+      // Automatic backfill: if this device added custom members previously that
+      // are stored in localStorage but not yet in MongoDB Atlas, push them now!
+      const localTeams = loadTeams();
+      const seedNames = new Set<string>();
+      SEED_TEAMS.forEach((t) => t.members.forEach((m) => seedNames.add(m.name.toLowerCase().trim())));
+      const dbNames = new Set(dbMembers.map((m) => m.name.toLowerCase().trim()));
+
+      for (const t of localTeams) {
+        for (const m of t.members) {
+          const norm = m.name.toLowerCase().trim();
+          if (!seedNames.has(norm) && !dbNames.has(norm)) {
+            try {
+              const saved = await createMember({
+                name: m.name,
+                teamId: t.id,
+                teamName: t.name,
+                responsibilities: m.responsibilities,
+                imageUrl: m.imageUrl || undefined,
+              });
+              dbMembers.push(saved);
+              dbNames.add(norm);
+            } catch (e) {
+              console.warn("Backfill to cloud failed for member:", m.name, e);
+            }
+          }
+        }
+      }
+
+      const merged = mergeTeamsWithCloud(SEED_TEAMS, dbMembers, dbDepts);
+      setTeams(merged);
+      saveTeams(merged);
+    } catch (err) {
+      console.warn("Could not sync teams with cloud:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    syncWithCloud();
+
+    const onFocus = () => {
+      syncWithCloud();
+    };
+
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("visibilitychange", onFocus);
+    const interval = setInterval(syncWithCloud, 25000);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("visibilitychange", onFocus);
+      clearInterval(interval);
+    };
+  }, [syncWithCloud]);
+
+  const addTeam = useCallback(async (team: Omit<TeamEntry, "members">) => {
     commit([...teams, { ...team, members: [] }]);
+    try {
+      await apiCreateDepartment({
+        id: team.id,
+        name: team.name,
+        color: team.color,
+        lightColor: team.lightColor,
+      });
+    } catch (err) {
+      console.warn("Failed to create department in cloud:", err);
+    }
   }, [teams, commit]);
 
-  const updateTeam = useCallback((id: string, patch: Partial<Omit<TeamEntry, "id" | "members">>) => {
-    commit(teams.map((t) => t.id === id ? { ...t, ...patch } : t));
+  const updateTeam = useCallback(async (id: string, patch: Partial<Omit<TeamEntry, "id" | "members">>) => {
+    commit(teams.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    try {
+      await apiUpdateDepartment(id, {
+        name: patch.name,
+        color: patch.color,
+        lightColor: patch.lightColor,
+      });
+    } catch (err) {
+      console.warn("Failed to update department in cloud:", err);
+    }
   }, [teams, commit]);
 
-  const removeTeam = useCallback((id: string) => {
+  const removeTeam = useCallback(async (id: string) => {
     commit(teams.filter((t) => t.id !== id));
+    try {
+      await apiDeleteDepartment(id);
+    } catch (err) {
+      console.warn("Failed to delete department in cloud:", err);
+    }
   }, [teams, commit]);
 
-  const addMember = useCallback((teamId: string, member: Omit<TeamMemberEntry, "id">) => {
-    commit(teams.map((t) =>
+  const addMember = useCallback(async (teamId: string, member: Omit<TeamMemberEntry, "id">) => {
+    const tempId = `temp-${uid()}`;
+    const newMember: TeamMemberEntry = { ...member, id: tempId, isCustom: true };
+    const currentTeams = teams.map((t) =>
+      t.id === teamId ? { ...t, members: [...t.members, newMember] } : t
+    );
+    commit(currentTeams);
+
+    try {
+      const dept = teams.find((t) => t.id === teamId);
+      const saved = await createMember({
+        name: member.name,
+        teamId,
+        teamName: dept?.name || teamId,
+        responsibilities: member.responsibilities,
+        imageUrl: member.imageUrl || undefined,
+      });
+
+      setTeams((prev) => {
+        const next = prev.map((t) =>
+          t.id === teamId
+            ? {
+                ...t,
+                members: t.members.map((m) =>
+                  m.id === tempId ? { ...m, id: String(saved.id) } : m
+                ),
+              }
+            : t
+        );
+        saveTeams(next);
+        return next;
+      });
+    } catch (err) {
+      console.warn("Failed to save member to cloud:", err);
+    }
+  }, [teams, commit]);
+
+  const updateMember = useCallback(async (teamId: string, memberId: string, patch: Partial<Omit<TeamMemberEntry, "id">>) => {
+    const currentTeams = teams.map((t) =>
       t.id === teamId
-        ? { ...t, members: [...t.members, { ...member, id: uid() }] }
+        ? { ...t, members: t.members.map((m) => (m.id === memberId ? { ...m, ...patch } : m)) }
         : t
-    ));
+    );
+    commit(currentTeams);
+
+    try {
+      const dept = teams.find((t) => t.id === teamId);
+      await apiUpdateMember(memberId, {
+        name: patch.name,
+        teamId,
+        teamName: dept?.name || teamId,
+        responsibilities: patch.responsibilities,
+        imageUrl: patch.imageUrl || undefined,
+      });
+    } catch (err) {
+      console.warn("Failed to sync update to cloud:", err);
+    }
   }, [teams, commit]);
 
-  const updateMember = useCallback((teamId: string, memberId: string, patch: Partial<Omit<TeamMemberEntry, "id">>) => {
-    commit(teams.map((t) =>
-      t.id === teamId
-        ? { ...t, members: t.members.map((m) => m.id === memberId ? { ...m, ...patch } : m) }
-        : t
-    ));
-  }, [teams, commit]);
-
-  const removeMember = useCallback((teamId: string, memberId: string) => {
-    commit(teams.map((t) =>
+  const removeMember = useCallback(async (teamId: string, memberId: string) => {
+    const currentTeams = teams.map((t) =>
       t.id === teamId
         ? { ...t, members: t.members.filter((m) => m.id !== memberId) }
         : t
-    ));
+    );
+    commit(currentTeams);
+
+    try {
+      await apiDeleteMember(memberId);
+    } catch (err) {
+      console.warn("Failed to delete member from cloud:", err);
+    }
   }, [teams, commit]);
 
   const resetToDefaults = useCallback(() => {
@@ -255,7 +510,18 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
   return (
     React.createElement(TeamContext.Provider, {
-      value: { teams, addTeam, updateTeam, removeTeam, addMember, updateMember, removeMember, resetToDefaults },
+      value: {
+        teams,
+        isSyncing,
+        addTeam,
+        updateTeam,
+        removeTeam,
+        addMember,
+        updateMember,
+        removeMember,
+        refreshTeams: syncWithCloud,
+        resetToDefaults,
+      },
       children,
     })
   );
@@ -267,10 +533,8 @@ export function useTeamStore(): TeamStore {
   return ctx;
 }
 
-// ── Legacy static helpers (still used by non-context callers) ────────────
+// ── Legacy static helpers ─────────────────────────────
 
-/** Returns a live snapshot of TEAMS from localStorage (or seed).
- *  Use `useTeamStore().teams` inside React components instead. */
 export const TEAMS: TeamEntry[] = loadTeams();
 
 export function getTotalMemberCount(): number {

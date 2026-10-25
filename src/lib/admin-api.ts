@@ -1,7 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export interface TeamMember {
-  id: number;
+  id: number | string;
   name: string;
   team_id: string;
   team_name: string;
@@ -31,7 +31,7 @@ export interface TeamGroup {
 // ── Auth ───────────────────────────────────────────────
 
 function getToken(): string | null {
-  return localStorage.getItem("belvo_admin_token");
+  return localStorage.getItem("belvo_admin_token") || localStorage.getItem("belvo_intern_token");
 }
 
 export function setToken(token: string): void {
@@ -76,10 +76,20 @@ async function api<T>(
     headers,
   });
 
-  const data = await res.json();
+  const contentType = res.headers.get("content-type") || "";
+  let data: any = {};
+  if (contentType.includes("application/json")) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`Request failed (${res.status}): ${text.slice(0, 120)}`);
+    }
+    return { success: true } as unknown as T;
+  }
 
   if (!res.ok) {
-    throw new Error(data.message || "Request failed");
+    throw new Error(data.message || `Request failed with status ${res.status}`);
   }
 
   return data;
@@ -88,7 +98,7 @@ async function api<T>(
 // ── Auth API ───────────────────────────────────────────
 
 export async function login(username: string, password: string): Promise<string> {
-  const data = await api<{ success: boolean; token: string }>("/admin/login", {
+  const data = await api<{ success: boolean; token: string }>("/api/admin/login", {
     method: "POST",
     body: JSON.stringify({ username, password }),
   });
@@ -119,7 +129,7 @@ export async function createMember(member: {
 }
 
 export async function updateMember(
-  id: number,
+  id: number | string,
   member: Partial<{
     name: string;
     teamId: string;
@@ -136,7 +146,7 @@ export async function updateMember(
   return data.member;
 }
 
-export async function deleteMember(id: number): Promise<void> {
+export async function deleteMember(id: number | string): Promise<void> {
   await api<{ success: boolean }>(`/api/team/${id}`, {
     method: "DELETE",
   });

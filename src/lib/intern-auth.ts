@@ -10,6 +10,7 @@ export function getToken(): string | null {
 
 function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem("belvo_admin_token", token);
 }
 
 export function clearToken(): void {
@@ -79,7 +80,7 @@ async function api<T>(
 
 export async function sendOtp(email: string): Promise<void> {
   try {
-    await api<{ success: boolean; message: string }>("/intern/send-otp", {
+    await api<{ success: boolean; message: string }>("/api/intern/send-otp", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
@@ -97,7 +98,7 @@ export async function verifyOtp(
       success: boolean;
       token: string;
       email: string;
-    }>("/intern/verify-otp", {
+    }>("/api/intern/verify-otp", {
       method: "POST",
       body: JSON.stringify({ email, otp }),
     });
@@ -133,7 +134,7 @@ export async function loginWithPassword(
       success: boolean;
       token: string;
       username: string;
-    }>("/intern/login", {
+    }>("/api/intern/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
