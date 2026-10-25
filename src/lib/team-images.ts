@@ -65,13 +65,7 @@ export function getTeamMemberImage(memberName: string): string | undefined {
     if (IMAGE_MAP[override]) return IMAGE_MAP[override];
   }
   if (IMAGE_MAP[key]) return IMAGE_MAP[key];
-  const firstName = key.split(/\s+/)[0];
-  if (IMAGE_MAP[firstName]) return IMAGE_MAP[firstName];
-  const lastName = key.split(/\s+/).pop()!;
-  if (IMAGE_MAP[lastName]) return IMAGE_MAP[lastName];
-  const fuzzy = Object.keys(IMAGE_MAP).find(
-    (k) => key.includes(k) || k.includes(key)
-  );
-  if (fuzzy) return IMAGE_MAP[fuzzy];
+  // Do NOT loosely fall back to single first names or substring fuzzy matching
+  // for multi-word full names (e.g. "Aaryan Bansal" must NOT match "aaryan.png").
   return undefined;
 }

@@ -28,9 +28,8 @@ function MemberCard({
   imageUrl?: string | null;
 }) {
   const initials = getInitials(name);
-  // Local bundled photo takes priority; imageUrl has already been resolved
-  // by mergeDbIntoSeeds so it's always an absolute-or-root-relative URL here.
-  const img = getTeamMemberImage(name) || (imageUrl ?? undefined);
+  // Uploaded photo takes top priority; bundled asset photo is fallback only.
+  const img = (imageUrl && imageUrl.trim()) ? imageUrl : getTeamMemberImage(name);
 
   return (
     <motion.div
@@ -138,7 +137,7 @@ function AdminGroup({ adminTeam }: { adminTeam?: TeamEntry }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 240px))", gap: 16 }}>
         {adminTeam.members.map((member, i) => (
           <MemberCard
-            key={member.name}
+            key={member.id || member.name}
             name={member.name}
             team={member.role ?? adminTeam.name}
             color={adminTeam.color}
@@ -177,7 +176,7 @@ function TeamGroup({ team }: { team: TeamEntry }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
         {team.members.map((member, i) => (
           <MemberCard
-            key={member.name} name={member.name} team={member.role?.trim() || team.name}
+            key={member.id || member.name} name={member.name} team={member.role?.trim() || team.name}
             color={team.color} lightColor={team.lightColor}
             responsibilities={member.responsibilities}
             imageUrl={member.imageUrl}

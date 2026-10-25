@@ -53,12 +53,6 @@ function getLocalImage(name: string): string | undefined {
   const override = NAME_OVERRIDES[key];
   if (override && IMAGE_MAP[override]) return IMAGE_MAP[override];
   if (IMAGE_MAP[key]) return IMAGE_MAP[key];
-  const firstName = key.split(/\s+/)[0];
-  if (IMAGE_MAP[firstName]) return IMAGE_MAP[firstName];
-  const lastName = key.split(/\s+/).pop()!;
-  if (IMAGE_MAP[lastName]) return IMAGE_MAP[lastName];
-  const fuzzy = Object.keys(IMAGE_MAP).find(k => key.includes(k) || k.includes(key));
-  if (fuzzy) return IMAGE_MAP[fuzzy];
   return undefined;
 }
 
@@ -758,13 +752,16 @@ export default function AdminDashboard() {
 
   const handleDelete = async () => {
     if (!deletingMember) return;
+    const target = deletingMember;
+    setDeletingMember(null);
+    setMembers((prev) => prev.filter((m) => m.id !== target.id && m.name.toLowerCase().trim() !== target.name.toLowerCase().trim()));
     try {
-      await deleteMember(deletingMember.id);
+      await deleteMember(target.id, target.name);
       toast.success("Member deleted");
-      setDeletingMember(null);
       loadData();
     } catch {
       toast.error("Failed to delete member");
+      loadData();
     }
   };
 

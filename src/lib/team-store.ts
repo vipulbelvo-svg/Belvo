@@ -15,6 +15,7 @@ import React, {
 } from "react";
 import {
   fetchTeam,
+  fetchTeamData,
   createMember,
   updateMember as apiUpdateMember,
   deleteMember as apiDeleteMember,
@@ -178,12 +179,10 @@ function resolveImageUrl(url: string | null | undefined): string | undefined {
 export function mergeTeamsWithCloud(
   baseTeams: TeamEntry[],
   dbMembers: TeamMember[],
-  dbDepts: Department[]
+  dbDepts: Department[],
+  deletedIds: Set<string> = new Set(),
+  deletedNames: Set<string> = new Set()
 ): TeamEntry[] {
-  if (!dbMembers.length && !dbDepts.length) {
-    return baseTeams;
-  }
-
   const byTeamId = new Map<string, TeamMember[]>();
   for (const m of dbMembers) {
     const tid = m.team_id || "web";
@@ -204,41 +203,59 @@ export function mergeTeamsWithCloud(
     const dbForTeam = byTeamId.get(seedTeam.id) ?? [];
 
     const existingNames = new Set<string>();
-    const patchedMembers: TeamMemberEntry[] = seedTeam.members.map((sm) => {
-      existingNames.add(sm.name.toLowerCase().trim());
-      const match = dbForTeam.find(
-        (dm) =>
-          String(dm.id) === String(sm.id) ||
-          dm.name.toLowerCase().trim() === sm.name.toLowerCase().trim()
-      );
-      if (match) {
-        matchedDbIds.add(String(match.id));
-        existingNames.add(match.name.toLowerCase().trim());
-        return {
-          ...sm,
-          id: String(match.id),
-          name: match.name || sm.name,
-          role: match.role !== undefined ? match.role : sm.role,
-          imageUrl: resolveImageUrl(match.image_url) ?? sm.imageUrl,
-          responsibilities: match.responsibilities?.length ? match.responsibilities : sm.responsibilities,
-        };
-      }
-      return sm;
-    });
 
-    const newMembers: TeamMemberEntry[] = dbForTeam
-      .filter((dm) => !matchedDbIds.has(String(dm.id)) && !existingNames.has(dm.name.toLowerCase().trim()))
-      .map((dm) => {
-        matchedDbIds.add(String(dm.id));
-        return {
-          id: String(dm.id),
-          name: dm.name,
-          role: dm.role,
-          imageUrl: resolveImageUrl(dm.image_url),
-          responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
-          isCustom: true,
-        };
+    // 1. Filter out deleted seed members, then patch with any DB updates
+    const patchedMembers: TeamMemberEntry[] = seedTeam.members
+      .filter((sm) => {
+        const idMatch = deletedIds.has(String(sm.id));
+        const nameMatch = deletedNames.has(sm.name.toLowerCase().trim());
+        return !idMatch && !nameMatch;
+      })
+      .map((sm) => {
+        existingNames.add(sm.name.toLowerCase().trim());
+        const match = dbForTeam.find(
+          (dm) =>
+            String(dm.id) === String(sm.id) ||
+            dm.name.toLowerCase().trim() === sm.name.toLowerCase().trim()
+        );
+        if (match) {
+          matchedDbIds.add(String(match.id));
+          return {
+            ...sm,
+            id: String(match.id),
+            name: match.name || sm.name,
+            role: match.role !== undefined ? match.role : sm.role,
+            imageUrl: resolveImageUrl(match.image_url) ?? sm.imageUrl,
+            responsibilities: match.responsibilities?.length ? match.responsibilities : sm.responsibilities,
+          };
+        }
+        return sm;
       });
+
+    // 2. Add custom members for this team, ensuring no duplicate names or resurrected deleted members
+    const newMembers: TeamMemberEntry[] = [];
+    for (const dm of dbForTeam) {
+      const idStr = String(dm.id);
+      const normName = dm.name.toLowerCase().trim();
+      if (
+        matchedDbIds.has(idStr) ||
+        existingNames.has(normName) ||
+        deletedIds.has(idStr) ||
+        deletedNames.has(normName)
+      ) {
+        continue;
+      }
+      matchedDbIds.add(idStr);
+      existingNames.add(normName);
+      newMembers.push({
+        id: idStr,
+        name: dm.name,
+        role: dm.role,
+        imageUrl: resolveImageUrl(dm.image_url),
+        responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
+        isCustom: true,
+      });
+    }
 
     return {
       ...seedTeam,
@@ -254,22 +271,38 @@ export function mergeTeamsWithCloud(
   for (const d of dbDepts) {
     if (!existingTeamIds.has(d.id)) {
       const dbForTeam = byTeamId.get(d.id) ?? [];
+      const teamExistingNames = new Set<string>();
+      const members: TeamMemberEntry[] = [];
+
+      for (const dm of dbForTeam) {
+        const idStr = String(dm.id);
+        const normName = dm.name.toLowerCase().trim();
+        if (
+          matchedDbIds.has(idStr) ||
+          teamExistingNames.has(normName) ||
+          deletedIds.has(idStr) ||
+          deletedNames.has(normName)
+        ) {
+          continue;
+        }
+        matchedDbIds.add(idStr);
+        teamExistingNames.add(normName);
+        members.push({
+          id: idStr,
+          name: dm.name,
+          role: dm.role,
+          imageUrl: resolveImageUrl(dm.image_url),
+          responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
+          isCustom: true,
+        });
+      }
+
       result.push({
         id: d.id,
         name: d.name,
         color: d.color,
         lightColor: d.light_color,
-        members: dbForTeam.map((dm) => {
-          matchedDbIds.add(String(dm.id));
-          return {
-            id: String(dm.id),
-            name: dm.name,
-            role: dm.role,
-            imageUrl: resolveImageUrl(dm.image_url),
-            responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
-            isCustom: true,
-          };
-        }),
+        members,
       });
       existingTeamIds.add(d.id);
     }
@@ -278,19 +311,38 @@ export function mergeTeamsWithCloud(
   // Also catch any DB members whose team_id was created dynamically without a dept record
   for (const [tid, members] of byTeamId.entries()) {
     if (!existingTeamIds.has(tid)) {
-      result.push({
-        id: tid,
-        name: members[0]?.team_name || tid,
-        color: "#0b3b9c",
-        lightColor: "#5ba9e6",
-        members: members.map((dm) => ({
-          id: String(dm.id),
+      const teamExistingNames = new Set<string>();
+      const teamMembers: TeamMemberEntry[] = [];
+
+      for (const dm of members) {
+        const idStr = String(dm.id);
+        const normName = dm.name.toLowerCase().trim();
+        if (
+          matchedDbIds.has(idStr) ||
+          teamExistingNames.has(normName) ||
+          deletedIds.has(idStr) ||
+          deletedNames.has(normName)
+        ) {
+          continue;
+        }
+        matchedDbIds.add(idStr);
+        teamExistingNames.add(normName);
+        teamMembers.push({
+          id: idStr,
           name: dm.name,
           role: dm.role,
           imageUrl: resolveImageUrl(dm.image_url),
           responsibilities: dm.responsibilities?.length ? dm.responsibilities : undefined,
           isCustom: true,
-        })),
+        });
+      }
+
+      result.push({
+        id: tid,
+        name: members[0]?.team_name || tid,
+        color: "#0b3b9c",
+        lightColor: "#5ba9e6",
+        members: teamMembers,
       });
       existingTeamIds.add(tid);
     }
@@ -302,6 +354,47 @@ export function mergeTeamsWithCloud(
 // ── Persistence ───────────────────────────────────────
 
 const STORAGE_KEY = "belvo_teams_v1";
+const DELETED_KEY = "belvo_deleted_members_v1";
+
+function loadDeleted(): { ids: string[]; names: string[] } {
+  try {
+    const raw = localStorage.getItem(DELETED_KEY);
+    if (!raw) return { ids: [], names: [] };
+    const parsed = JSON.parse(raw);
+    return {
+      ids: Array.isArray(parsed?.ids) ? parsed.ids : [],
+      names: Array.isArray(parsed?.names) ? parsed.names : [],
+    };
+  } catch {
+    return { ids: [], names: [] };
+  }
+}
+
+function recordDeleted(id?: string, name?: string) {
+  try {
+    const cur = loadDeleted();
+    if (id && !cur.ids.includes(String(id))) cur.ids.push(String(id));
+    if (name) {
+      const norm = name.toLowerCase().trim();
+      if (!cur.names.includes(norm)) cur.names.push(norm);
+    }
+    localStorage.setItem(DELETED_KEY, JSON.stringify(cur));
+  } catch {}
+}
+
+function clearDeleted(name?: string, id?: string) {
+  try {
+    const cur = loadDeleted();
+    if (name) {
+      const norm = name.toLowerCase().trim();
+      cur.names = cur.names.filter((n) => n !== norm);
+    }
+    if (id) {
+      cur.ids = cur.ids.filter((i) => i !== String(id));
+    }
+    localStorage.setItem(DELETED_KEY, JSON.stringify(cur));
+  } catch {}
+}
 
 function loadTeams(): TeamEntry[] {
   try {
@@ -370,44 +463,25 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const syncWithCloud = useCallback(async () => {
     setIsSyncing(true);
     try {
-      const [dbMembers, dbDepts] = await Promise.all([
-        fetchTeam().catch(() => [] as TeamMember[]),
+      const [teamData, dbDepts] = await Promise.all([
+        fetchTeamData().catch(() => ({ members: [] as TeamMember[], deletedIds: [] as string[], deletedNames: [] as string[] })),
         fetchDepartments().catch(() => [] as Department[]),
       ]);
 
-      // Automatic backfill: if this device added custom members previously that
-      // are stored in localStorage but not yet in MongoDB Atlas, push them now!
-      const localTeams = loadTeams();
-      const seedNames = new Set<string>();
-      SEED_TEAMS.forEach((t) => t.members.forEach((m) => seedNames.add(m.name.toLowerCase().trim())));
-      const dbNames = new Set(dbMembers.map((m) => m.name.toLowerCase().trim()));
-      const dbIds = new Set(dbMembers.map((m) => String(m.id)));
+      const localDeleted = loadDeleted();
+      const allDeletedIds = new Set([...localDeleted.ids, ...(teamData.deletedIds || [])]);
+      const allDeletedNames = new Set([
+        ...localDeleted.names,
+        ...(teamData.deletedNames || []).map((n) => n.toLowerCase().trim()),
+      ]);
 
-      for (const t of localTeams) {
-        for (const m of t.members) {
-          const norm = m.name.toLowerCase().trim();
-          const hasInDb = dbIds.has(String(m.id)) || dbNames.has(norm);
-          if (m.isCustom && !hasInDb) {
-            try {
-              const saved = await createMember({
-                name: m.name,
-                role: m.role,
-                teamId: t.id,
-                teamName: t.name,
-                responsibilities: m.responsibilities,
-                imageUrl: m.imageUrl || undefined,
-              });
-              dbMembers.push(saved);
-              dbNames.add(norm);
-              dbIds.add(String(saved.id));
-            } catch (e) {
-              console.warn("Backfill to cloud failed for member:", m.name, e);
-            }
-          }
-        }
-      }
-
-      const merged = mergeTeamsWithCloud(SEED_TEAMS, dbMembers, dbDepts);
+      const merged = mergeTeamsWithCloud(
+        SEED_TEAMS,
+        teamData.members,
+        dbDepts,
+        allDeletedIds,
+        allDeletedNames
+      );
       setTeams(merged);
       saveTeams(merged);
     } catch (err) {
@@ -472,6 +546,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   }, [teams, commit]);
 
   const addMember = useCallback(async (teamId: string, member: Omit<TeamMemberEntry, "id">) => {
+    clearDeleted(member.name);
     const tempId = `temp-${uid()}`;
     const newMember: TeamMemberEntry = { ...member, id: tempId, isCustom: true };
     setTeams((prev) => {
@@ -541,10 +616,20 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   }, [teams]);
 
   const removeMember = useCallback(async (teamId: string, memberId: string) => {
+    const target = teams.flatMap((t) => t.members).find((m) => m.id === memberId);
+    recordDeleted(memberId, target?.name);
+
     setTeams((prev) => {
       const next = prev.map((t) =>
         t.id === teamId
-          ? { ...t, members: t.members.filter((m) => m.id !== memberId) }
+          ? {
+              ...t,
+              members: t.members.filter(
+                (m) =>
+                  m.id !== memberId &&
+                  (!target?.name || m.name.toLowerCase().trim() !== target.name.toLowerCase().trim())
+              ),
+            }
           : t
       );
       saveTeams(next);
@@ -552,11 +637,11 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     });
 
     try {
-      await apiDeleteMember(memberId);
+      await apiDeleteMember(memberId, target?.name);
     } catch (err) {
       console.warn("Failed to delete member from cloud:", err);
     }
-  }, [teams, commit]);
+  }, [teams]);
 
   const resetToDefaults = useCallback(() => {
     commit(SEED_TEAMS);

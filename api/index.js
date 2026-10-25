@@ -442,26 +442,44 @@ app.get(["/api/team", "/team"], async (req, res) => {
     const ready = await isDbReady();
     if (ready) {
       const db = await getDb();
+      let deletedIds = [];
+      let deletedNames = [];
+      try {
+        const deletedDocs = await db.collection("deleted_team_members").find({}).toArray();
+        deletedIds = deletedDocs.map(d => String(d.member_id || d.id)).filter(Boolean);
+        deletedNames = deletedDocs.map(d => (d.name || "").toLowerCase().trim()).filter(Boolean);
+      } catch (e) {
+        console.warn("Could not fetch deleted_team_members:", e?.message);
+      }
+
       const members = await db.collection("team_members").find({}).sort({ sort_order: 1, name: 1 }).toArray();
-      const mapped = members.map(m => ({
-        ...m,
-        id: String(m._id || m.id),
-        name: m.name,
-        role: m.role || undefined,
-        team_id: m.team_id || m.teamId,
-        team_name: m.team_name || m.teamName,
-        responsibilities: m.responsibilities || [],
-        image_url: m.image_url || m.imageUrl,
-      }));
+      const mapped = members
+        .map(m => ({
+          ...m,
+          id: String(m._id || m.id),
+          name: m.name,
+          role: m.role || undefined,
+          team_id: m.team_id || m.teamId,
+          team_name: m.team_name || m.teamName,
+          responsibilities: m.responsibilities || [],
+          image_url: m.image_url || m.imageUrl,
+        }))
+        .filter(m => !deletedIds.includes(m.id) && !deletedNames.includes(m.name.toLowerCase().trim()));
+
       if (mapped.length > 0) {
         globalThis.__belvo_members = mapped;
       }
-      return res.json({ success: true, members: mapped.length > 0 ? mapped : (globalThis.__belvo_members || []) });
+      return res.json({
+        success: true,
+        members: mapped.length > 0 ? mapped : (globalThis.__belvo_members || []),
+        deletedIds,
+        deletedNames,
+      });
     }
-    return res.json({ success: true, members: globalThis.__belvo_members || [] });
+    return res.json({ success: true, members: globalThis.__belvo_members || [], deletedIds: [], deletedNames: [] });
   } catch (err) {
     console.error("GET /api/team error:", err);
-    res.json({ success: true, members: globalThis.__belvo_members || [], error: err?.message });
+    res.json({ success: true, members: globalThis.__belvo_members || [], deletedIds: [], deletedNames: [], error: err?.message });
   }
 });
 
@@ -471,12 +489,70 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
     if (!name || !teamId) {
       return res.status(400).json({ success: false, message: "Name and team are required" });
     }
+    const cleanName = name.trim();
     const now = new Date().toISOString();
+
+    try {
+      const ready = await isDbReady();
+      if (ready) {
+        const db = await getDb();
+
+        // Clear from deleted_team_members so the newly added intern is active
+        await db.collection("deleted_team_members").deleteMany({
+          $or: [
+            { name: cleanName.toLowerCase() },
+            { name: { $regex: new RegExp(`^${cleanName}$`, "i") } },
+          ],
+        });
+
+        // Deduplication check: if member already exists in the same team, update instead of duplicating
+        const existing = await db.collection("team_members").findOne({
+          team_id: teamId,
+          name: { $regex: new RegExp(`^${cleanName}$`, "i") },
+        });
+
+        if (existing) {
+          const updates = {
+            name: cleanName,
+            role: role !== undefined ? role.trim() : existing.role || "",
+            team_id: teamId,
+            team_name: teamName || existing.team_name || "",
+            responsibilities: responsibilities || existing.responsibilities || [],
+            image_url: imageUrl !== undefined ? imageUrl : existing.image_url,
+            sort_order: sortOrder !== undefined ? sortOrder : existing.sort_order || 0,
+            updated_at: now,
+          };
+          await db.collection("team_members").updateOne({ _id: existing._id }, { $set: updates });
+          const member = { ...existing, ...updates, id: String(existing._id) };
+          return res.status(200).json({ success: true, member });
+        }
+
+        const newId = new ObjectId().toString();
+        const member = {
+          id: newId,
+          _id: new ObjectId(newId),
+          name: cleanName,
+          role: role ? role.trim() : "",
+          team_id: teamId,
+          team_name: teamName || "",
+          responsibilities: responsibilities || [],
+          image_url: imageUrl || null,
+          sort_order: sortOrder || 0,
+          created_at: now,
+          updated_at: now,
+        };
+        await db.collection("team_members").insertOne(member);
+        return res.status(201).json({ success: true, member: { ...member, id: newId } });
+      }
+    } catch (dbErr) {
+      console.error("MongoDB background insert error:", dbErr?.message);
+    }
+
     const newId = new ObjectId().toString();
-    const member = {
+    const fallbackMember = {
       id: newId,
       _id: newId,
-      name: name.trim(),
+      name: cleanName,
       role: role ? role.trim() : "",
       team_id: teamId,
       team_name: teamName || "",
@@ -487,18 +563,8 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
       updated_at: now,
     };
     if (!globalThis.__belvo_members) globalThis.__belvo_members = [];
-    globalThis.__belvo_members.push(member);
-
-    try {
-      const ready = await isDbReady();
-      if (ready) {
-        const db = await getDb();
-        await db.collection("team_members").insertOne({ ...member, _id: new ObjectId(newId) });
-      }
-    } catch (dbErr) {
-      console.error("MongoDB background insert error:", dbErr?.message);
-    }
-    res.status(201).json({ success: true, member });
+    globalThis.__belvo_members.push(fallbackMember);
+    res.status(201).json({ success: true, member: fallbackMember });
   } catch (err) {
     console.error("POST /api/team error:", err);
     res.status(500).json({ success: false, message: "Failed to create member", error: err?.message });
@@ -577,20 +643,46 @@ app.put(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
 app.delete(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const name = (req.query.name || req.body?.name || "").trim();
+    const normName = name.toLowerCase();
+
     if (globalThis.__belvo_members) {
-      globalThis.__belvo_members = globalThis.__belvo_members.filter(m => String(m.id) !== String(id) && String(m._id) !== String(id));
+      globalThis.__belvo_members = globalThis.__belvo_members.filter(m => {
+        const matchId = String(m.id) === String(id) || String(m._id) === String(id);
+        const matchName = normName && (m.name || "").toLowerCase().trim() === normName;
+        return !matchId && !matchName;
+      });
     }
+
     try {
       const ready = await isDbReady();
       if (ready) {
         const db = await getDb();
-        let query;
+        const orClauses = [];
         if (ObjectId.isValid(id) && id.length === 24) {
-          query = { _id: new ObjectId(id) };
-        } else {
-          query = { $or: [{ id: id }, { _id: id }] };
+          orClauses.push({ _id: new ObjectId(id) });
         }
-        await db.collection("team_members").deleteOne(query);
+        orClauses.push({ id: String(id) });
+        orClauses.push({ _id: String(id) });
+        if (normName) {
+          orClauses.push({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+        }
+
+        // Delete all matching documents (removes any duplicate records as well)
+        await db.collection("team_members").deleteMany({ $or: orClauses });
+
+        // Record in deleted_team_members so seed members or any future sync keep them deleted
+        await db.collection("deleted_team_members").updateOne(
+          { member_id: String(id) },
+          {
+            $set: {
+              member_id: String(id),
+              name: normName || "",
+              deleted_at: new Date().toISOString(),
+            },
+          },
+          { upsert: true }
+        );
       }
     } catch (dbErr) {
       console.error("MongoDB background delete error:", dbErr?.message);

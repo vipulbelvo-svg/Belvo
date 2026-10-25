@@ -126,6 +126,24 @@ export async function fetchTeam(): Promise<TeamMember[]> {
   return data.members;
 }
 
+export async function fetchTeamData(): Promise<{
+  members: TeamMember[];
+  deletedIds: string[];
+  deletedNames: string[];
+}> {
+  const data = await api<{
+    success: boolean;
+    members: TeamMember[];
+    deletedIds?: string[];
+    deletedNames?: string[];
+  }>("/api/team");
+  return {
+    members: data.members || [],
+    deletedIds: data.deletedIds || [],
+    deletedNames: data.deletedNames || [],
+  };
+}
+
 export async function createMember(member: {
   name: string;
   role?: string;
@@ -161,8 +179,9 @@ export async function updateMember(
   return data.member;
 }
 
-export async function deleteMember(id: number | string): Promise<void> {
-  await api<{ success: boolean }>(`/api/team/${id}`, {
+export async function deleteMember(id: number | string, name?: string): Promise<void> {
+  const query = name ? `?name=${encodeURIComponent(name.trim())}` : "";
+  await api<{ success: boolean }>(`/api/team/${id}${query}`, {
     method: "DELETE",
   });
 }

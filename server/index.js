@@ -546,24 +546,36 @@ app.get(["/api/team", "/team"], async (req, res) => {
     }
 
     const db = await getDb();
+    let deletedIds = [];
+    let deletedNames = [];
+    try {
+      const deletedDocs = await db.collection("deleted_team_members").find({}).toArray();
+      deletedIds = deletedDocs.map((d) => String(d.member_id || d.id)).filter(Boolean);
+      deletedNames = deletedDocs.map((d) => (d.name || "").toLowerCase().trim()).filter(Boolean);
+    } catch (e) {
+      console.warn("Could not fetch deleted_team_members:", e?.message);
+    }
+
     const members = await db
       .collection("team_members")
       .find({})
       .sort({ sort_order: 1, name: 1 })
       .toArray();
 
-    const mapped = members.map((m) => ({
-      ...m,
-      id: String(m._id || m.id),
-      name: m.name,
-      role: m.role || undefined,
-      team_id: m.team_id || m.teamId,
-      team_name: m.team_name || m.teamName,
-      responsibilities: m.responsibilities || [],
-      image_url: m.image_url || m.imageUrl,
-    }));
+    const mapped = members
+      .map((m) => ({
+        ...m,
+        id: String(m._id || m.id),
+        name: m.name,
+        role: m.role || undefined,
+        team_id: m.team_id || m.teamId,
+        team_name: m.team_name || m.teamName,
+        responsibilities: m.responsibilities || [],
+        image_url: m.image_url || m.imageUrl,
+      }))
+      .filter((m) => !deletedIds.includes(m.id) && !deletedNames.includes(m.name.toLowerCase().trim()));
 
-    res.json({ success: true, members: mapped });
+    res.json({ success: true, members: mapped, deletedIds, deletedNames });
   } catch (err) {
     console.error("GET /api/team error:", err);
     res.status(500).json({ success: false, message: "Failed to fetch team members" });
@@ -583,10 +595,42 @@ app.post(["/api/team", "/team"], authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: "Name and team are required" });
     }
 
+    const cleanName = name.trim();
     const now = new Date().toISOString();
     const db = await getDb();
+
+    // Clear from deleted_team_members so newly added intern is active
+    await db.collection("deleted_team_members").deleteMany({
+      $or: [
+        { name: cleanName.toLowerCase() },
+        { name: { $regex: new RegExp(`^${cleanName}$`, "i") } },
+      ],
+    });
+
+    // Deduplication check: if member already exists in the same team, update instead of duplicating
+    const existing = await db.collection("team_members").findOne({
+      team_id: teamId,
+      name: { $regex: new RegExp(`^${cleanName}$`, "i") },
+    });
+
+    if (existing) {
+      const updates = {
+        name: cleanName,
+        role: role !== undefined ? role.trim() : existing.role || "",
+        team_id: teamId,
+        team_name: teamName || existing.team_name || "",
+        responsibilities: responsibilities || existing.responsibilities || [],
+        image_url: imageUrl !== undefined ? imageUrl : existing.image_url,
+        sort_order: sortOrder !== undefined ? sortOrder : existing.sort_order || 0,
+        updated_at: now,
+      };
+      await db.collection("team_members").updateOne({ _id: existing._id }, { $set: updates });
+      const member = { ...existing, ...updates, id: String(existing._id) };
+      return res.status(200).json({ success: true, member });
+    }
+
     const member = {
-      name: name.trim(),
+      name: cleanName,
       role: role ? role.trim() : "",
       team_id: teamId,
       team_name: teamName || "",
@@ -679,16 +723,36 @@ app.delete(["/api/team/:id", "/team/:id"], authenticateToken, async (req, res) =
     }
 
     const { id } = req.params;
+    const name = (req.query.name || req.body?.name || "").trim();
+    const normName = name.toLowerCase();
+
     const { ObjectId } = await import("mongodb");
     const db = await getDb();
-    let query;
+    const orClauses = [];
     if (ObjectId.isValid(id) && id.length === 24) {
-      query = { _id: new ObjectId(id) };
-    } else {
-      query = { $or: [{ id: id }, { _id: id }] };
+      orClauses.push({ _id: new ObjectId(id) });
+    }
+    orClauses.push({ id: String(id) });
+    orClauses.push({ _id: String(id) });
+    if (normName) {
+      orClauses.push({ name: { $regex: new RegExp(`^${name}$`, "i") } });
     }
 
-    await db.collection("team_members").deleteOne(query);
+    await db.collection("team_members").deleteMany({ $or: orClauses });
+
+    // Record in deleted_team_members
+    await db.collection("deleted_team_members").updateOne(
+      { member_id: String(id) },
+      {
+        $set: {
+          member_id: String(id),
+          name: normName || "",
+          deleted_at: new Date().toISOString(),
+        },
+      },
+      { upsert: true }
+    );
+
     res.json({ success: true, message: "Member deleted" });
   } catch (err) {
     console.error("DELETE /api/team/:id error:", err);
