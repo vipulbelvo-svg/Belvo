@@ -130,7 +130,7 @@ const LINK_COLUMNS: Array<{ title: string; links: FooterLink[] }> = [
     title: "Resources",
     links: [
       { label: "Tools & Pricing", path: "/tools" },
-      { label: "FAQ", path: "/", id: "faq" },
+      { label: "FAQ", path: "/about", id: "faq" },
       { label: "Book A Call", path: "/", id: "book-a-call" },
     ],
   },
@@ -278,7 +278,7 @@ export default function Footer() {
       if (link.id) {
         window.setTimeout(() => {
           scrollToId(link.id!);
-        }, 180);
+        }, 400);
       }
       return;
     }
