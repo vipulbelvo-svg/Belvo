@@ -43,15 +43,28 @@ export default function Navbar() {
   const handleBookCall = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsOpen(false);
-    if (location === "/about") {
+
+    const scrollToBookACall = () => {
       const el = document.getElementById("book-a-call");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        return true;
+      }
+      return false;
+    };
+
+    if (location === "/about") {
+      scrollToBookACall();
     } else {
       navigate("/about");
-      setTimeout(() => {
-        const el = document.getElementById("book-a-call");
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 500);
+      // Poll until the element is mounted (lazy-loaded page may take time)
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (scrollToBookACall() || attempts >= 20) {
+          clearInterval(interval);
+        }
+      }, 100);
     }
   };
 
