@@ -1,0 +1,562 @@
+[
+  {
+    "originalName": "Akkireddy sai amar chaitanya.",
+    "cleanName": "Akkireddy sai amar chaitanya",
+    "fileName": "Akkireddy sai amar chaitanya.png",
+    "sizeBytes": 11179,
+    "team": "Business & Data Analytics",
+    "role": ""
+  },
+  {
+    "originalName": "Andhavarapu Rohit.",
+    "cleanName": "Andhavarapu Rohit",
+    "fileName": "Andhavarapu Rohit.png",
+    "sizeBytes": 11315,
+    "team": "Business & Data Analytics",
+    "role": "Data Analyst"
+  },
+  {
+    "originalName": "Ankush Gemnnani.",
+    "cleanName": "Ankush Gemnnani",
+    "fileName": "Ankush Gemnnani.png",
+    "sizeBytes": 10231,
+    "team": "Software Development",
+    "role": ""
+  },
+  {
+    "originalName": "Anshika Srivastava",
+    "cleanName": "Anshika Srivastava",
+    "fileName": "Anshika Srivastava.png",
+    "sizeBytes": 19131,
+    "team": "App Development",
+    "role": "App developer"
+  },
+  {
+    "originalName": "Anshika Srivastava",
+    "cleanName": "Anshika Srivastava",
+    "fileName": "Anshika Srivastava.png",
+    "sizeBytes": 19131,
+    "team": "App Development",
+    "role": "App developer"
+  },
+  {
+    "originalName": "Arikatla Naga Jyothi.",
+    "cleanName": "Arikatla Naga Jyothi",
+    "fileName": "Arikatla Naga Jyothi.png",
+    "sizeBytes": 12476,
+    "team": "Business & Data Analytics",
+    "role": "Product Analyst"
+  },
+  {
+    "originalName": "Arti punia.",
+    "cleanName": "Arti punia",
+    "fileName": "Arti punia.png",
+    "sizeBytes": 9759,
+    "team": "Marketing",
+    "role": "brand outreach and PR team"
+  },
+  {
+    "originalName": "Asht vinayak.",
+    "cleanName": "Asht vinayak",
+    "fileName": "Asht vinayak.png",
+    "sizeBytes": 10729,
+    "team": "Cinematography",
+    "role": "Video editor"
+  },
+  {
+    "originalName": "Atchyuta Pavan Karthikeya.",
+    "cleanName": "Atchyuta Pavan Karthikeya",
+    "fileName": "Atchyuta Pavan Karthikeya.png",
+    "sizeBytes": 10638,
+    "team": "AIML",
+    "role": "AIML Engineer"
+  },
+  {
+    "originalName": "Balaka Rasmita Reddy.",
+    "cleanName": "Balaka Rasmita Reddy",
+    "fileName": "Balaka Rasmita Reddy.png",
+    "sizeBytes": 11525,
+    "team": "Marketing",
+    "role": "Digital marketing"
+  },
+  {
+    "originalName": "Bhuvanasri.",
+    "cleanName": "Bhuvanasri",
+    "fileName": "Bhuvanasri.png",
+    "sizeBytes": 14028,
+    "team": "Business & Data Analytics",
+    "role": ""
+  },
+  {
+    "originalName": "Budige Ashwini.",
+    "cleanName": "Budige Ashwini",
+    "fileName": "Budige Ashwini.png",
+    "sizeBytes": 10128,
+    "team": "Software Development",
+    "role": "Software Developer"
+  },
+  {
+    "originalName": "Charan jannarapu.",
+    "cleanName": "Charan jannarapu",
+    "fileName": "Charan jannarapu.png",
+    "sizeBytes": 10327,
+    "team": "Software Development",
+    "role": "Software developer"
+  },
+  {
+    "originalName": "Chayan Banga.",
+    "cleanName": "Chayan Banga",
+    "fileName": "Chayan Banga.png",
+    "sizeBytes": 10975,
+    "team": "AIML",
+    "role": "AIML engineer"
+  },
+  {
+    "originalName": "Chinnadamera Snehavarsha.",
+    "cleanName": "Chinnadamera Snehavarsha",
+    "fileName": "Chinnadamera Snehavarsha.png",
+    "sizeBytes": 11944,
+    "team": "Business & Data Analytics",
+    "role": "Data Analyst"
+  },
+  {
+    "originalName": "Dhaskhaya Balaraman.",
+    "cleanName": "Dhaskhaya Balaraman",
+    "fileName": "Dhaskhaya Balaraman.png",
+    "sizeBytes": 12179,
+    "team": "Business & Data Analytics",
+    "role": "Data Analyst"
+  },
+  {
+    "originalName": "Divyansh Salanki.",
+    "cleanName": "Divyansh Salanki",
+    "fileName": "Divyansh Salanki.png",
+    "sizeBytes": 11777,
+    "team": "Web Development",
+    "role": ""
+  },
+  {
+    "originalName": "Gokavarapu Yashwanth.",
+    "cleanName": "Gokavarapu Yashwanth",
+    "fileName": "Gokavarapu Yashwanth.png",
+    "sizeBytes": 8304,
+    "team": "Web Development",
+    "role": ""
+  },
+  {
+    "originalName": "Gudishetty manasvini.",
+    "cleanName": "Gudishetty manasvini",
+    "fileName": "Gudishetty manasvini.png",
+    "sizeBytes": 9383,
+    "team": "Web Development",
+    "role": "Frontend developer"
+  },
+  {
+    "originalName": "Gunda sathvik.",
+    "cleanName": "Gunda sathvik",
+    "fileName": "Gunda sathvik.png",
+    "sizeBytes": 10055,
+    "team": "AIML",
+    "role": "Robotics"
+  },
+  {
+    "originalName": "Gunjan Umate.",
+    "cleanName": "Gunjan Umate",
+    "fileName": "Gunjan Umate.png",
+    "sizeBytes": 11716,
+    "team": "Marketing",
+    "role": "Marketing and outreach intern"
+  },
+  {
+    "originalName": "Hansika pallikonda.",
+    "cleanName": "Hansika pallikonda",
+    "fileName": "Hansika pallikonda.png",
+    "sizeBytes": 11245,
+    "team": "Business & Data Analytics",
+    "role": "Data engineer"
+  },
+  {
+    "originalName": "Harsh mayank.",
+    "cleanName": "Harsh mayank",
+    "fileName": "Harsh mayank.png",
+    "sizeBytes": 10556,
+    "team": "Web Development",
+    "role": ""
+  },
+  {
+    "originalName": "Himagiri siddesh M.",
+    "cleanName": "Himagiri siddesh M",
+    "fileName": "Himagiri siddesh M.png",
+    "sizeBytes": 8794,
+    "team": "Cyber Security",
+    "role": ""
+  },
+  {
+    "originalName": "Hrishikesh Mishra.",
+    "cleanName": "Hrishikesh Mishra",
+    "fileName": "Hrishikesh Mishra.png",
+    "sizeBytes": 20585,
+    "team": "Founder and CEO",
+    "role": "Founder, and CEO"
+  },
+  {
+    "originalName": "Ishwari",
+    "cleanName": "Ishwari",
+    "fileName": "Ishwari.png",
+    "sizeBytes": 21196,
+    "team": "Web Development",
+    "role": "Web developer"
+  },
+  {
+    "originalName": "J.Japesh Reddy.",
+    "cleanName": "J.Japesh Reddy",
+    "fileName": "J.Japesh Reddy.png",
+    "sizeBytes": 9688,
+    "team": "Business & Data Analytics",
+    "role": ""
+  },
+  {
+    "originalName": "JM Navanthiga.",
+    "cleanName": "JM Navanthiga",
+    "fileName": "JM Navanthiga.png",
+    "sizeBytes": 10796,
+    "team": "Web Development",
+    "role": "Backend Developer"
+  },
+  {
+    "originalName": "Jabez Jesudason.",
+    "cleanName": "Jabez Jesudason",
+    "fileName": "Jabez Jesudason.png",
+    "sizeBytes": 9478,
+    "team": "Web Development",
+    "role": "Web Development Intern"
+  },
+  {
+    "originalName": "Kasetty lavanya.",
+    "cleanName": "Kasetty lavanya",
+    "fileName": "Kasetty lavanya.png",
+    "sizeBytes": 8699,
+    "team": "HR",
+    "role": "HR"
+  },
+  {
+    "originalName": "Kolipaka abhichandra.",
+    "cleanName": "Kolipaka abhichandra",
+    "fileName": "Kolipaka abhichandra.png",
+    "sizeBytes": 9829,
+    "team": "Web Development",
+    "role": ""
+  },
+  {
+    "originalName": "Kolluru hari chandra sekhar.",
+    "cleanName": "Kolluru hari chandra sekhar",
+    "fileName": "Kolluru hari chandra sekhar.png",
+    "sizeBytes": 9863,
+    "team": "Web Development",
+    "role": "web developer"
+  },
+  {
+    "originalName": "Lakshya jaiswal.",
+    "cleanName": "Lakshya jaiswal",
+    "fileName": "Lakshya jaiswal.png",
+    "sizeBytes": 8506,
+    "team": "App Development",
+    "role": "Android Developer"
+  },
+  {
+    "originalName": "Mahammad imran.",
+    "cleanName": "Mahammad imran",
+    "fileName": "Mahammad imran.png",
+    "sizeBytes": 9775,
+    "team": "Software Development",
+    "role": "Software developer"
+  },
+  {
+    "originalName": "Mamindla Mayur",
+    "cleanName": "Mamindla Mayur",
+    "fileName": "Mamindla Mayur.png",
+    "sizeBytes": 11357,
+    "team": "Administration",
+    "role": "Team Manager"
+  },
+  {
+    "originalName": "Manasvi Singh pundir.",
+    "cleanName": "Manasvi Singh pundir",
+    "fileName": "Manasvi Singh pundir.png",
+    "sizeBytes": 12538,
+    "team": "Business & Data Analytics",
+    "role": "Business Analyst"
+  },
+  {
+    "originalName": "Mohammad anasuddin zaid",
+    "cleanName": "Mohammad anasuddin zaid",
+    "fileName": "Mohammad anasuddin zaid.png",
+    "sizeBytes": 58293,
+    "team": "Business & Data Analytics",
+    "role": "Business analyst"
+  },
+  {
+    "originalName": "Mohd Affan siddiqui.",
+    "cleanName": "Mohd Affan siddiqui",
+    "fileName": "Mohd Affan siddiqui.png",
+    "sizeBytes": 10029,
+    "team": "Web Development",
+    "role": "Frontend developer"
+  },
+  {
+    "originalName": "Narsannagari nandeeshwar reddy.",
+    "cleanName": "Narsannagari nandeeshwar reddy",
+    "fileName": "Narsannagari nandeeshwar reddy.png",
+    "sizeBytes": 9313,
+    "team": "Software Development",
+    "role": "Software developer"
+  },
+  {
+    "originalName": "Neha Gaikwad.",
+    "cleanName": "Neha Gaikwad",
+    "fileName": "Neha Gaikwad.png",
+    "sizeBytes": 10736,
+    "team": "Software Development",
+    "role": ""
+  },
+  {
+    "originalName": "Nimish Garrg.",
+    "cleanName": "Nimish Garrg",
+    "fileName": "Nimish Garrg.png",
+    "sizeBytes": 9927,
+    "team": "Web Development",
+    "role": "Frontend developer"
+  },
+  {
+    "originalName": "Pari singal.",
+    "cleanName": "Pari singal",
+    "fileName": "Pari singal.png",
+    "sizeBytes": 11266,
+    "team": "Business & Data Analytics",
+    "role": "Data Analyst"
+  },
+  {
+    "originalName": "Parthib basu.",
+    "cleanName": "Parthib basu",
+    "fileName": "Parthib basu.png",
+    "sizeBytes": 10369,
+    "team": "Software Development",
+    "role": "Principal engineer"
+  },
+  {
+    "originalName": "Patnayukuni Vinod.",
+    "cleanName": "Patnayukuni Vinod",
+    "fileName": "Patnayukuni Vinod.png",
+    "sizeBytes": 10849,
+    "team": "Graphic Designing",
+    "role": "UI/UX Designer"
+  },
+  {
+    "originalName": "Pippera thrija.",
+    "cleanName": "Pippera thrija",
+    "fileName": "Pippera thrija.png",
+    "sizeBytes": 11184,
+    "team": "AIML",
+    "role": "AIML engineer"
+  },
+  {
+    "originalName": "Pranitha sai.",
+    "cleanName": "Pranitha sai",
+    "fileName": "Pranitha sai.png",
+    "sizeBytes": 11975,
+    "team": "Administration",
+    "role": "CBDO"
+  },
+  {
+    "originalName": "Rachana reddy.",
+    "cleanName": "Rachana reddy",
+    "fileName": "Rachana reddy.png",
+    "sizeBytes": 6595,
+    "team": "HR",
+    "role": "HR"
+  },
+  {
+    "originalName": "Rampally lalish.",
+    "cleanName": "Rampally lalish",
+    "fileName": "Rampally lalish.png",
+    "sizeBytes": 8404,
+    "team": "Software Development",
+    "role": "Software developer"
+  },
+  {
+    "originalName": "Ramya pathak.",
+    "cleanName": "Ramya pathak",
+    "fileName": "Ramya pathak.png",
+    "sizeBytes": 7939,
+    "team": "Marketing",
+    "role": "Marketing associate"
+  },
+  {
+    "originalName": "Ravi Vinayak.",
+    "cleanName": "Ravi Vinayak",
+    "fileName": "Ravi Vinayak.png",
+    "sizeBytes": 10570,
+    "team": "AIML",
+    "role": "AIML engineer"
+  },
+  {
+    "originalName": "Saggam Niheetha.",
+    "cleanName": "Saggam Niheetha",
+    "fileName": "Saggam Niheetha.png",
+    "sizeBytes": 12197,
+    "team": "AIML",
+    "role": "AIML Engineer"
+  },
+  {
+    "originalName": "Saipriya Bhowmik.",
+    "cleanName": "Saipriya Bhowmik",
+    "fileName": "Saipriya Bhowmik.png",
+    "sizeBytes": 11018,
+    "team": "Social Media Management",
+    "role": "Social media intern"
+  },
+  {
+    "originalName": "Santhosh thummalagunta.",
+    "cleanName": "Santhosh thummalagunta",
+    "fileName": "Santhosh thummalagunta.png",
+    "sizeBytes": 10619,
+    "team": "Business & Data Analytics",
+    "role": "data analyst"
+  },
+  {
+    "originalName": "Shaik afshan.",
+    "cleanName": "Shaik afshan",
+    "fileName": "Shaik afshan.png",
+    "sizeBytes": 11467,
+    "team": "Business & Data Analytics",
+    "role": "Data analyst"
+  },
+  {
+    "originalName": "Shakti Prasad Muduli.",
+    "cleanName": "Shakti Prasad Muduli",
+    "fileName": "Shakti Prasad Muduli.png",
+    "sizeBytes": 10312,
+    "team": "Software Development",
+    "role": "Penetration engineer"
+  },
+  {
+    "originalName": "Sheth yamani",
+    "cleanName": "Sheth yamani",
+    "fileName": "Sheth yamani.png",
+    "sizeBytes": 49754,
+    "team": "HR",
+    "role": "HR"
+  },
+  {
+    "originalName": "Shruti kumari.",
+    "cleanName": "Shruti kumari",
+    "fileName": "Shruti kumari.png",
+    "sizeBytes": 11673,
+    "team": "Graphic Designing",
+    "role": "UI/UX desinger"
+  },
+  {
+    "originalName": "Smahi Jhang.",
+    "cleanName": "Smahi Jhang",
+    "fileName": "Smahi Jhang.png",
+    "sizeBytes": 11632,
+    "team": "Marketing",
+    "role": "Product design"
+  },
+  {
+    "originalName": "Sourab reddy.",
+    "cleanName": "Sourab reddy",
+    "fileName": "Sourab reddy.png",
+    "sizeBytes": 10049,
+    "team": "Web Development",
+    "role": "Web developer"
+  },
+  {
+    "originalName": "Sravani juturu.",
+    "cleanName": "Sravani juturu",
+    "fileName": "Sravani juturu.png",
+    "sizeBytes": 11872,
+    "team": "Business & Data Analytics",
+    "role": "Data Analyst"
+  },
+  {
+    "originalName": "Supriya.",
+    "cleanName": "Supriya",
+    "fileName": "Supriya.png",
+    "sizeBytes": 12735,
+    "team": "Business & Data Analytics",
+    "role": ""
+  },
+  {
+    "originalName": "Surya panav.",
+    "cleanName": "Surya panav",
+    "fileName": "Surya panav.png",
+    "sizeBytes": 12201,
+    "team": "Web Development",
+    "role": "Frontend developer"
+  },
+  {
+    "originalName": "Tamil Selvan",
+    "cleanName": "Tamil Selvan",
+    "fileName": "Tamil Selvan.png",
+    "sizeBytes": 71672,
+    "team": "Web Development",
+    "role": ""
+  },
+  {
+    "originalName": "Vedant Chautiwar.",
+    "cleanName": "Vedant Chautiwar",
+    "fileName": "Vedant Chautiwar.png",
+    "sizeBytes": 10016,
+    "team": "Administration",
+    "role": ""
+  },
+  {
+    "originalName": "Vedant Malwar.",
+    "cleanName": "Vedant Malwar",
+    "fileName": "Vedant Malwar.png",
+    "sizeBytes": 10861,
+    "team": "Software Development",
+    "role": "Software Developer"
+  },
+  {
+    "originalName": "Vipul Reddy Yenugula.",
+    "cleanName": "Vipul Reddy Yenugula",
+    "fileName": "Vipul Reddy Yenugula.png",
+    "sizeBytes": 9483,
+    "team": "Web Development",
+    "role": "Full-Stack Developer."
+  },
+  {
+    "originalName": "Vishali Karee.",
+    "cleanName": "Vishali Karee",
+    "fileName": "Vishali Karee.png",
+    "sizeBytes": 8005,
+    "team": "Cyber Security",
+    "role": "cyber security"
+  },
+  {
+    "originalName": "Yash.",
+    "cleanName": "Yash",
+    "fileName": "Yash.png",
+    "sizeBytes": 12005,
+    "team": "Graphic Designing",
+    "role": ""
+  },
+  {
+    "originalName": "Yashwanth polepalli.",
+    "cleanName": "Yashwanth polepalli",
+    "fileName": "Yashwanth polepalli.png",
+    "sizeBytes": 10018,
+    "team": "Web Development",
+    "role": "web Developer"
+  },
+  {
+    "originalName": "hema harshitha.",
+    "cleanName": "hema harshitha",
+    "fileName": "hema harshitha.png",
+    "sizeBytes": 11929,
+    "team": "Marketing",
+    "role": "brand outreach and pr team"
+  }
+]

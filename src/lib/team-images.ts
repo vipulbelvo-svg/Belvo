@@ -10,13 +10,28 @@ const imageModules = import.meta.glob("/src/collectives/*", {
 }) as Record<string, string>;
 
 export const IMAGE_MAP: Record<string, string> = {};
-Object.entries(imageModules).forEach(([path, url]) => {
-  const name = path
+
+// Sort entries so that .png files (purple t-shirts) are processed AFTER .jpeg/.jpg,
+// guaranteeing that purple t-shirt photos always take precedence.
+const sortedEntries = Object.entries(imageModules).sort(([pathA], [pathB]) => {
+  const isPngA = pathA.toLowerCase().endsWith(".png");
+  const isPngB = pathB.toLowerCase().endsWith(".png");
+  if (!isPngA && isPngB) return -1;
+  if (isPngA && !isPngB) return 1;
+  return 0;
+});
+
+sortedEntries.forEach(([path, url]) => {
+  const base = path
     .split("/")
     .pop()!
-    .replace(/\.[^.]+$/, "")
-    .toLowerCase();
-  IMAGE_MAP[name] = url;
+    .replace(/\.[^.]+$/, "");
+  const normalizedKey = base.toLowerCase().trim().replace(/\.+$/, "");
+  IMAGE_MAP[normalizedKey] = url;
+  const alphaKey = normalizedKey.replace(/[^a-z0-9]/g, "");
+  if (alphaKey) {
+    IMAGE_MAP[alphaKey] = url;
+  }
 });
 
 /** Maps display-name variants → image filename keys (without extension). */
@@ -24,7 +39,7 @@ export const NAME_OVERRIDES: Record<string, string> = {
   "ram nath g k": "ramnath",
   "saurav": "sourav",
   "sharfudeen": "sharfu",
-  "sheth yamani": "seth yamani",
+  "sheth yamani": "sheth yamani",
   "naveen k d": "naveen kumar",
   "shailender": "shilendar",
   "sibijan": "sibi",
@@ -34,15 +49,15 @@ export const NAME_OVERRIDES: Record<string, string> = {
   "rimi ghosh": "rimi",
   "mohd usaid ali khan": "mohd usaid",
   "mohammad ali": "mohd usaid",
-  "mohammad anasuddin zaid": "mohs anas",
-  "anshika srivastava": "anshika",
+  "mohammad anasuddin zaid": "mohammad anasuddin zaid",
+  "anshika srivastava": "anshika srivastava",
   "sri satya": "sri",
   "guru dutt": "guru",
   "anurag khushwaha": "anurag",
   "achintya gurba": "achintya gurba",
   "deepak sharma": "deepak sharma",
-  "tamil selvan": "tamil",
-  "yash": "yash1",
+  "tamil selvan": "tamil selvan",
+  "yash": "yash",
   "chirag arora": "chirag-arora",
   "neha gaikwad": "neha gaikwad",
   "aryan": "aaryan",
@@ -52,7 +67,8 @@ export const NAME_OVERRIDES: Record<string, string> = {
   "sujeet kumar": "sujeet kumar",
   "shaik nihayath": "shaik nihayath",
   "sourab reddy": "sourab reddy",
-  "gokavarapu yaswanth": "gokavarapu yaswanth",
+  "gokavarapu yaswanth": "gokavarapu yashwanth",
+  "gokavarapu yashwanth": "gokavarapu yashwanth",
   "vivek khalia": "vivek khalia",
 };
 
@@ -61,14 +77,22 @@ export const NAME_OVERRIDES: Record<string, string> = {
  * Returns `undefined` when no local photo is found.
  */
 export function getTeamMemberImage(memberName: string): string | undefined {
-  const key = memberName.toLowerCase().trim();
-  const override = NAME_OVERRIDES[key];
+  if (!memberName) return undefined;
+  const raw = memberName.toLowerCase().trim();
+  const clean = raw.replace(/\.+$/, "").trim();
+  const alpha = clean.replace(/[^a-z0-9]/g, "");
+
+  const override = NAME_OVERRIDES[clean] || NAME_OVERRIDES[raw] || NAME_OVERRIDES[alpha];
   if (override !== undefined) {
     if (override === "") return undefined;
     if (IMAGE_MAP[override]) return IMAGE_MAP[override];
+    const alphaOverride = override.replace(/[^a-z0-9]/g, "");
+    if (IMAGE_MAP[alphaOverride]) return IMAGE_MAP[alphaOverride];
   }
-  if (IMAGE_MAP[key]) return IMAGE_MAP[key];
-  // Do NOT loosely fall back to single first names or substring fuzzy matching
-  // for multi-word full names (e.g. "Aaryan Bansal" must NOT match "aaryan.png").
+
+  if (IMAGE_MAP[clean]) return IMAGE_MAP[clean];
+  if (IMAGE_MAP[raw]) return IMAGE_MAP[raw];
+  if (IMAGE_MAP[alpha]) return IMAGE_MAP[alpha];
+
   return undefined;
 }

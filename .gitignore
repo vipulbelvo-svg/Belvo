@@ -13,3 +13,4 @@ server/server.log
 server/uploads/
 server/.env
 .rocketride/
+.vercel

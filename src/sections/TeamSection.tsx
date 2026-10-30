@@ -30,7 +30,7 @@ function MemberCard({
   const initials = getInitials(name);
   // Bundled static asset photo is fast and CDN-cached; falls back to custom cloud URL if added dynamically
   const localImg = getTeamMemberImage(name);
-  const img = localImg || (imageUrl && imageUrl.trim() ? imageUrl : undefined);
+  const img = (imageUrl && imageUrl.trim() ? imageUrl : undefined) || localImg;
 
   return (
     <motion.div

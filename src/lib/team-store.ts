@@ -158,6 +158,7 @@ export const SEED_TEAMS: TeamEntry[] = [
       makeMember("Shailender"),
       makeMember("Aditya Sarkar"),
       makeMember("Divyansh Salanki"),
+      makeMember("Vipul Reddy Yenugula", { role: "Full-Stack Developer" }),
       makeMember("Harshitha"),
       makeMember("Chirag Arora"),
       makeMember("Prathamesh Kharbal"),

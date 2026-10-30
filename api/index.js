@@ -79,6 +79,9 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024
 
 // Direct standard replica-set MongoDB URI (avoids DNS SRV query failures on cloud lambda runtimes)
 
+const FALLBACK_MONGODB_URI =
+  "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&authSource=admin&retryWrites=true&w=majority";
+
 let _client;
 let _db;
 
@@ -90,7 +93,7 @@ function getValidMongoUri() {
   if (envUri.startsWith("mongodb://") || envUri.startsWith("mongodb+srv://")) {
     return envUri;
   }
-  return "";
+  return FALLBACK_MONGODB_URI;
 }
 
 function getClient() {
@@ -478,7 +481,7 @@ app.get(["/api/team", "/team"], async (req, res) => {
           team_id: m.team_id || m.teamId,
           team_name: m.team_name || m.teamName,
           responsibilities: m.responsibilities || [],
-          image_url: m.image_url && (!m.image_url.startsWith("data:") || m.image_url.length < 50000) ? m.image_url : null,
+          image_url: m.image_url || null,
         }))
         .filter(m => !deletedIds.includes(m.id) && !deletedNames.includes(m.name.toLowerCase().trim()));
 
