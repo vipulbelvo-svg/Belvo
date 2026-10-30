@@ -58,13 +58,6 @@ function authenticateToken(req, res, next) {
     req.user = decoded;
     return next();
   } catch {
-    try {
-      const mock = JSON.parse(Buffer.from(token, "base64").toString());
-      if (mock && (!mock.exp || mock.exp * 1000 > Date.now())) {
-        req.user = mock;
-        return next();
-      }
-    } catch {}
     return res.status(403).json({
       success: false,
       message: "Invalid or expired token.",
@@ -85,8 +78,6 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Direct standard replica-set MongoDB URI (avoids DNS SRV query failures on cloud lambda runtimes)
-const FALLBACK_MONGODB_URI =
-  "mongodb://abhichandrabelvo_db_user:DMgbIBPOhQZO8gZ1@ac-cmny1mh-shard-00-00.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-01.f4e5dom.mongodb.net:27017,ac-cmny1mh-shard-00-02.f4e5dom.mongodb.net:27017/belvo?ssl=true&authSource=admin&retryWrites=true&w=majority";
 
 let _client;
 let _db;
@@ -99,12 +90,13 @@ function getValidMongoUri() {
   if (envUri.startsWith("mongodb://") || envUri.startsWith("mongodb+srv://")) {
     return envUri;
   }
-  return FALLBACK_MONGODB_URI;
+  return "";
 }
 
 function getClient() {
   if (_client === undefined) {
     const uri = getValidMongoUri();
+    if (!uri) return null;
     _client = new MongoClient(uri, {
       serverSelectionTimeoutMS: 8000,
       connectTimeoutMS: 8000,

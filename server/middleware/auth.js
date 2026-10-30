@@ -39,13 +39,6 @@ export function authenticateToken(req, res, next) {
     req.user = decoded;
     return next();
   } catch {
-    try {
-      const mock = JSON.parse(Buffer.from(token, "base64").toString());
-      if (mock && (!mock.exp || mock.exp * 1000 > Date.now())) {
-        req.user = mock;
-        return next();
-      }
-    } catch {}
     return res.status(403).json({
       success: false,
       message: "Invalid or expired token.",

@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import accescoLivingLogo from "@/Images/accesco-living.png";
 
 const COMPANIES = [
   { name: "Zoho", id: "zoho", color: "#E02E2E", logo: "/company_logos/zoho.svg" },
@@ -7,6 +8,7 @@ const COMPANIES = [
   { name: "Microsoft 365", id: "microsoft365", color: "#D83B01", logo: "/company_logos/microsoft.svg" },
   { name: "Notion", id: "notion", color: "#555555", logo: "/company_logos/notion.svg" },
   { name: "Google Workspace", id: "google", color: "#4285F4", logo: "/company_logos/google.svg" },
+  { name: "Accesco living", id: "accesco-living", color: "#D81B60", logo: accescoLivingLogo },
   { name: "Jira", id: "jira", color: "#0052CC", logo: "/company_logos/jira.svg" },
   { name: "Bitrix", id: "bitrix24", color: "#56C1FF", logo: "/company_logos/bitrix24.svg" },
 ];
@@ -18,6 +20,7 @@ function Card({ company, index, totalCards, scrollYProgress }: { company: typeof
   const scale = useTransform(scrollYProgress, [rangeStart, rangeEnd], [1, 0.95]);
 
   const isLast = index === totalCards - 1;
+  const isAccesco = company.id === "accesco-living";
 
   return (
     <div
@@ -59,14 +62,24 @@ function Card({ company, index, totalCards, scrollYProgress }: { company: typeof
 
         <div style={{
           width: "100px", height: "100px",
-          background: "rgba(255,255,255,0.1)",
+          background: isAccesco ? "#ffffff" : "rgba(255,255,255,0.1)",
           backdropFilter: "blur(12px)",
           borderRadius: "24px",
           display: "flex", alignItems: "center", justifyContent: "center",
           marginBottom: "24px",
-          border: "1px solid rgba(255,255,255,0.2)"
+          border: isAccesco ? "1px solid rgba(255,255,255,0.9)" : "1px solid rgba(255,255,255,0.2)",
+          boxShadow: isAccesco ? "0 8px 30px rgba(0,0,0,0.3)" : undefined,
         }}>
-          <img src={company.logo} alt={company.name} style={{ width: "50px", height: "50px", objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+          <img
+            src={company.logo}
+            alt={company.name}
+            style={{
+              width: isAccesco ? "64px" : "50px",
+              height: isAccesco ? "64px" : "50px",
+              objectFit: "contain",
+              filter: isAccesco ? "none" : "brightness(0) invert(1)",
+            }}
+          />
         </div>
 
         <h3 style={{

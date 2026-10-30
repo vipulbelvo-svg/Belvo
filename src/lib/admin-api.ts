@@ -32,19 +32,7 @@ export interface TeamGroup {
 // ── Auth ───────────────────────────────────────────────
 
 function getToken(): string | null {
-  const stored = localStorage.getItem("belvo_admin_token") || localStorage.getItem("belvo_intern_token");
-  if (stored) return stored;
-  try {
-    return btoa(
-      JSON.stringify({
-        username: "belvo.internportal",
-        role: "intern",
-        exp: Math.floor(Date.now() / 1000) + 86400 * 30,
-      })
-    );
-  } catch {
-    return null;
-  }
+  return localStorage.getItem("belvo_admin_token") || localStorage.getItem("belvo_intern_token");
 }
 
 export function setToken(token: string): void {
@@ -59,7 +47,9 @@ export function isAuthenticated(): boolean {
   const token = getToken();
   if (!token) return false;
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
     return payload.exp * 1000 > Date.now();
   } catch {
     return false;

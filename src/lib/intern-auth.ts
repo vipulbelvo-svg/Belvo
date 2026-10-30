@@ -30,13 +30,9 @@ export function isAuthenticated(): boolean {
   const token = getToken();
   if (!token) return false;
   try {
-    // Real JWT: header.payload.signature  (3 segments)
-    // Mock token: plain btoa(JSON)        (0 dots)
     const parts = token.split(".");
-    const raw = parts.length >= 3
-      ? atob(parts[1])          // real JWT — decode middle segment
-      : atob(token);            // mock token — decode the whole thing
-    const payload = JSON.parse(raw);
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
     return payload.exp * 1000 > Date.now();
   } catch {
     return false;
@@ -76,87 +72,53 @@ async function api<T>(
   return data;
 }
 
-// ── OTP Auth (legacy — kept for reference) ───────────
+// ── OTP Auth ──────────────────────────────────────────
 
 export async function sendOtp(email: string): Promise<void> {
-  try {
-    await api<{ success: boolean; message: string }>("/api/intern/send-otp", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
-  } catch {
-    // Backend unreachable — offline mode: silently accept
-  }
+  await api<{ success: boolean; message: string }>("/api/intern/send-otp", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
 }
 
 export async function verifyOtp(
   email: string,
   otp: string
 ): Promise<{ token: string; email: string }> {
-  try {
-    const data = await api<{
-      success: boolean;
-      token: string;
-      email: string;
-    }>("/api/intern/verify-otp", {
-      method: "POST",
-      body: JSON.stringify({ email, otp }),
-    });
+  const data = await api<{
+    success: boolean;
+    token: string;
+    email: string;
+  }>("/api/intern/verify-otp", {
+    method: "POST",
+    body: JSON.stringify({ email, otp }),
+  });
 
-    setToken(data.token);
-    setEmail(data.email);
-    clearChecklist();
+  setToken(data.token);
+  setEmail(data.email);
+  clearChecklist();
 
-    return { token: data.token, email: data.email };
-  } catch {
-    // Backend unreachable — offline mode: accept any 6-digit OTP
-    const mockToken = btoa(JSON.stringify({ email, exp: Math.floor(Date.now() / 1000) + 86400 }));
-    setToken(mockToken);
-    setEmail(email);
-    clearChecklist();
-    return { token: mockToken, email };
-  }
+  return { token: data.token, email: data.email };
 }
 
 // ── Username / Password Auth ──────────────────────────
-
-const INTERN_CREDENTIALS: Record<string, string> = {
-  "belvo.internportal": "Belvo.intern@5",
-};
 
 export async function loginWithPassword(
   username: string,
   password: string
 ): Promise<{ token: string; username: string }> {
-  // Try the backend first
-  try {
-    const data = await api<{
-      success: boolean;
-      token: string;
-      username: string;
-    }>("/api/intern/login", {
-      method: "POST",
-      body: JSON.stringify({ username, password }),
-    });
+  const data = await api<{
+    success: boolean;
+    token: string;
+    username: string;
+  }>("/api/intern/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
 
-    setToken(data.token);
-    setEmail(data.username);
-    return { token: data.token, username: data.username };
-  } catch {
-    // Backend unreachable — fall back to local credential check
-  }
-
-  const expected = INTERN_CREDENTIALS[username.trim().toLowerCase()];
-  if (!expected || expected !== password) {
-    throw new Error("Invalid username or password");
-  }
-
-  const mockToken = btoa(
-    JSON.stringify({ username, exp: Math.floor(Date.now() / 1000) + 86400 * 7 })
-  );
-  setToken(mockToken);
-  setEmail(username);
-  return { token: mockToken, username };
+  setToken(data.token);
+  setEmail(data.username);
+  return { token: data.token, username: data.username };
 }
 
 // ── Checklist (per-device via localStorage) ──────────

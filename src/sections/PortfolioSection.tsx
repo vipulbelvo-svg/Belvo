@@ -23,7 +23,8 @@ const CATEGORIES: Category[] = [
   { name: "Skincare, Beauty & Personal Care", count: 12, color: "#E11D48", brands: [
     { name: "Ghar Soaps", url: "https://www.instagram.com/gharsoaps?igsh=MW9rMm1hOWNxMG9yYw==" },{ name: "Clayco Beauty", url: "https://www.instagram.com/claycobeauty?igsh=MXU0OHV1ZG0ybXl0bw==" },{ name: "Prowlactive", url: "https://www.instagram.com/prowlactive?igsh=MTAyMTlxNXJxaXh0bw==" },{ name: "Skinvest Skincare", url: "https://www.instagram.com/skinvest.skincare?igsh=eTAwNWhpa3F4dDhy" },{ name: "Grovya Organics", url: "https://www.instagram.com/grovyaorganics?igsh=MTVpN2J0MmljMWR0MA==" },{ name: "Bentica Skincare", url: "https://www.instagram.com/bentica.skincare?igsh=anR0aHhmNXJrbmZi" },{ name: "Mancode", url: "https://www.instagram.com/mancode.official?igsh=MWcxaXpyN2puaWE0YQ==" },{ name: "The Skin Story", url: "https://www.instagram.com/theskinstory_official?igsh=MTUxcTMwcGR0cnBjbQ==" },{ name: "Beard Story", url: "https://www.instagram.com/beardstory_official?igsh=MXczczEzano4OHRpdQ==" },{ name: "Arotatvika", url: "https://www.instagram.com/arotatvika?igsh=dmUyYzhodTBjN200" },{ name: "Sen-Z by FDNH", url: "https://www.instagram.com/senzbyfdnh.co?igsh=dmVxb3BveDFkOHpw" },{ name: "Illume Skin Care", url: "https://www.instagram.com/illumeskin.care?igsh=MWxjNnNwMXF1dHVnaw==" },
   ]},
-  { name: "Fashion, Apparel & Lifestyle", count: 11, color: "#F97316", brands: [
+  { name: "Fashion, Apparel & Lifestyle", count: 12, color: "#F97316", brands: [
+    { name: "Accesco living", url: "#", logo: "/company_logos/accesco-living-badge.png" },
     { name: "Bewakoof", url: "https://www.instagram.com/bewakoofofficial?igsh=eXB2dDllbXM2dXVo" },{ name: "Vasa Indica", url: "https://www.instagram.com/vasaindica?igsh=aDBiZHloZmphdTVq" },{ name: "Ahankar Wear", url: "https://www.instagram.com/ahankarwear?igsh=MWNlODVzamhzNzVscg==" },{ name: "Oje Living", url: "https://www.instagram.com/oje.living?igsh=MjdycjEwczd3eTE2" },{ name: "Goodhand Jaipur", url: "https://www.instagram.com/goodhand_jaipur?igsh=MTh6d3dxMmZ1bXl0cw==" },{ name: "Pironi", url: "https://www.instagram.com/pironi.official?igsh=MWc4czQxb3ZidmswdQ==" },{ name: "Shop Sagel", url: "https://www.instagram.com/shop.sagel?igsh=Mm1sZHJ0M3I1enMz" },{ name: "Better Basics", url: "https://www.instagram.com/betterbasics_in?igsh=MXFzcGVtNWNycTNsMw==" },{ name: "Modern Saheli", url: "https://www.instagram.com/modernsaheli?igsh=MThoaTdwM2xncXM1Zw==" },{ name: "Northstory", url: "https://www.instagram.com/northstory.shop?igsh=Y3lzejB6OGt3cWpp" },{ name: "KSHM Earth", url: "https://www.instagram.com/kshm.earth?igsh=YWN0M2ViOHFydnNw" },
   ]},
   { name: "Food, Snacks & FMCG", count: 7, color: "#F59E0B", brands: [
@@ -144,7 +145,7 @@ function BrandRow({ catName, brands, color, isIvory }: { catName: string; brands
 
   function BrandItem({ brand, i }: { brand: Brand; i: number }) {
     const initial = brand.name.replace(/['"]/g, "").charAt(0).toUpperCase();
-    const logoSrc = getLogoPath(catName, brand.url) || undefined;
+    const logoSrc = brand.logo || getLogoPath(catName, brand.url) || undefined;
     const badge = <BrandBadge logoSrc={logoSrc} initial={initial} color={color} rgb={rgb} />;
 
     const baseStyle: React.CSSProperties = {
