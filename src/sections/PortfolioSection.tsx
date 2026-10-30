@@ -36,8 +36,14 @@ const CATEGORIES: Category[] = [
   { name: "EdTech", count: 3, color: "#2563EB", brands: [
     { name: "Leaping Frogs", url: "https://www.instagram.com/leapingfrogs.theschool?igsh=" },{ name: "Trigr Exam", url: "https://www.instagram.com/trigrexam?igsh=MXF3ZTF5Y3Fka3Jydg==" },{ name: "Educurria", url: "https://www.instagram.com/educuria?igsh=MzBoZDRtZWM4NDh6" },
   ]},
-  { name: "FinTech", count: 3, color: "#059669", brands: [
-    { name: "Fasset", url: "https://www.instagram.com/fasset_official?igsh=MXZ2dGZwbGlzdmc1cw==" },{ name: "Cready", url: "https://www.instagram.com/cready_official?igsh=aXBqdGpjd2t3cmhz" },{ name: "Getepay", url: "https://www.instagram.com/getepay.in?igsh=MW0ycmd1MDFrZDUydw==" },
+  { name: "FinTech & Business", count: 7, color: "#059669", brands: [
+    { name: "Atlaas", url: "#", logo: "/company_logos/atlaas.png" },
+    { name: "Jitender Khushi and Associates", url: "#", logo: "/company_logos/jitender-khushi.png" },
+    { name: "Automatic Partners", url: "#", logo: "/company_logos/automatic-partners.png" },
+    { name: "Foundarly", url: "#", logo: "/company_logos/foundarly.png" },
+    { name: "Fasset", url: "https://www.instagram.com/fasset_official?igsh=MXZ2dGZwbGlzdmc1cw==" },
+    { name: "Cready", url: "https://www.instagram.com/cready_official?igsh=aXBqdGpjd2t3cmhz" },
+    { name: "Getepay", url: "https://www.instagram.com/getepay.in?igsh=MW0ycmd1MDFrZDUydw==" },
   ]},
   { name: "Modeling", count: 3, color: "#EC4899", brands: [
     { name: "72 MG Studio", url: "https://www.instagram.com/72mgstudio?igsh=MWk2ZTBtMmlleWMyaA==" },{ name: "Venera Workshops", url: "https://www.instagram.com/venera_workshops?igsh=MXNubGZuMmlzcDhmMA==" },{ name: "Ella Models India", url: "https://www.instagram.com/ellamodelsindia?igsh=MXUxaWhrazNhanM0bw==" },

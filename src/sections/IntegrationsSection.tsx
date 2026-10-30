@@ -1,26 +1,42 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import accescoLivingLogo from "@/Images/accesco-living.png";
+import atlaasLogo from "@/Images/atlaas.png";
+import jitenderKhushiLogo from "@/Images/jitender-khushi.png";
+import automaticPartnersLogo from "@/Images/automatic-partners.png";
+import foundarlyLogo from "@/Images/foundarly.png";
 
-const COMPANIES = [
+interface CompanyItem {
+  name: string;
+  id: string;
+  color: string;
+  logo: string;
+  isBrand?: boolean;
+}
+
+const COMPANIES: CompanyItem[] = [
   { name: "Zoho", id: "zoho", color: "#E02E2E", logo: "/company_logos/zoho.svg" },
   { name: "Microsoft Teams", id: "microsoftteams", color: "#6264A7", logo: "/company_logos/microsoftteams.svg" },
   { name: "Microsoft 365", id: "microsoft365", color: "#D83B01", logo: "/company_logos/microsoft.svg" },
   { name: "Notion", id: "notion", color: "#555555", logo: "/company_logos/notion.svg" },
   { name: "Google Workspace", id: "google", color: "#4285F4", logo: "/company_logos/google.svg" },
-  { name: "Accesco living", id: "accesco-living", color: "#D81B60", logo: accescoLivingLogo },
+  { name: "Accesco living", id: "accesco-living", color: "#D81B60", logo: accescoLivingLogo, isBrand: true },
+  { name: "Atlaas", id: "atlaas", color: "#DC2626", logo: atlaasLogo, isBrand: true },
+  { name: "Jitender Khushi and Associates", id: "jitender-khushi", color: "#1D4ED8", logo: jitenderKhushiLogo, isBrand: true },
+  { name: "Automatic Partners", id: "automatic-partners", color: "#059669", logo: automaticPartnersLogo, isBrand: true },
+  { name: "Foundarly", id: "foundarly", color: "#EAB308", logo: foundarlyLogo, isBrand: true },
   { name: "Jira", id: "jira", color: "#0052CC", logo: "/company_logos/jira.svg" },
   { name: "Bitrix", id: "bitrix24", color: "#56C1FF", logo: "/company_logos/bitrix24.svg" },
 ];
 
-function Card({ company, index, totalCards, scrollYProgress }: { company: typeof COMPANIES[0], index: number, totalCards: number, scrollYProgress: any }) {
+function Card({ company, index, totalCards, scrollYProgress }: { company: CompanyItem, index: number, totalCards: number, scrollYProgress: any }) {
   const rangeStart = index * (1 / totalCards);
   const rangeEnd = (index + 1) * (1 / totalCards);
 
   const scale = useTransform(scrollYProgress, [rangeStart, rangeEnd], [1, 0.95]);
 
   const isLast = index === totalCards - 1;
-  const isAccesco = company.id === "accesco-living";
+  const isBrand = Boolean(company.isBrand || company.id === "accesco-living");
 
   return (
     <div
@@ -62,22 +78,23 @@ function Card({ company, index, totalCards, scrollYProgress }: { company: typeof
 
         <div style={{
           width: "100px", height: "100px",
-          background: isAccesco ? "#ffffff" : "rgba(255,255,255,0.1)",
+          background: isBrand ? "#ffffff" : "rgba(255,255,255,0.1)",
           backdropFilter: "blur(12px)",
           borderRadius: "24px",
           display: "flex", alignItems: "center", justifyContent: "center",
           marginBottom: "24px",
-          border: isAccesco ? "1px solid rgba(255,255,255,0.9)" : "1px solid rgba(255,255,255,0.2)",
-          boxShadow: isAccesco ? "0 8px 30px rgba(0,0,0,0.3)" : undefined,
+          border: isBrand ? "1px solid rgba(255,255,255,0.9)" : "1px solid rgba(255,255,255,0.2)",
+          boxShadow: isBrand ? "0 8px 30px rgba(0,0,0,0.3)" : undefined,
+          padding: isBrand ? "6px" : undefined,
         }}>
           <img
             src={company.logo}
             alt={company.name}
             style={{
-              width: isAccesco ? "64px" : "50px",
-              height: isAccesco ? "64px" : "50px",
+              width: isBrand ? "76px" : "50px",
+              height: isBrand ? "76px" : "50px",
               objectFit: "contain",
-              filter: isAccesco ? "none" : "brightness(0) invert(1)",
+              filter: isBrand ? "none" : "brightness(0) invert(1)",
             }}
           />
         </div>
@@ -88,7 +105,9 @@ function Card({ company, index, totalCards, scrollYProgress }: { company: typeof
           fontSize: "2.5rem",
           color: "#fff",
           margin: 0,
-          letterSpacing: "-0.02em"
+          letterSpacing: "-0.02em",
+          textAlign: "center",
+          padding: "0 20px"
         }}>
           {company.name}
         </h3>
